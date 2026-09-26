@@ -1,68 +1,44 @@
-import Image from "next/image";
+import type { CSSProperties } from "react";
+import { AgentRun } from "@/components/arc/blocks/agent-run";
+import { AiChat } from "@/components/arc/blocks/ai-chat";
+import { InvitePeople } from "@/components/arc/blocks/invite-people";
+import { WalletCard } from "@/components/arc/blocks/wallet-card";
 import styles from "./page.module.css";
+import { ThemeToggle } from "./theme-toggle";
+
+const BLOCKS = [
+  { id: "agent-run", label: "Agent run", width: 7, className: styles.agentRun, description: "Timeline, approvals, pause and restart", node: <AgentRun /> },
+  { id: "wallet-card", label: "Wallet card", width: 5, className: styles.walletCard, description: "Balance, chart scrubbing, transfers and activity", node: <WalletCard /> },
+  { id: "invite-people", label: "Invite people", width: 5, className: styles.invitePeople, description: "Parsing, roles, seat limits and pending invites", node: <InvitePeople /> },
+  { id: "ai-chat", label: "AI chat", width: 7, className: styles.aiChat, description: "Streaming answers, tools, sources and editing", node: <AiChat /> },
+];
 
 export default function Home() {
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+      <main>
+        <section className={styles.section} id="blocks" aria-labelledby="blocks-title">
+          <div className={styles.head}>
+            <div className={styles.headRow}>
+              <h1 id="blocks-title">Complete blocks, ready to ship</h1>
+              <ThemeToggle className={styles.theme} />
+            </div>
+            <p>Whole flows built from the same parts, including interfaces for the AI products you build.</p>
+          </div>
+          <div className={styles.blocks}>
+            {BLOCKS.map((block) => (
+              <div key={block.id} id={block.id} className={styles.show} style={{ "--w": block.width } as CSSProperties} role="group" aria-label={block.label}>
+                <div className={`${styles.mount} ${block.className}`}>
+                  <div className={styles.mountInner}>{block.node}</div>
+                </div>
+                <p className={styles.caption}>
+                  <strong>{block.label}</strong>
+                  <span>{block.description}</span>
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
     </div>
   );
