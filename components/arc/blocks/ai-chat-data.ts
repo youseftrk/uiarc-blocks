@@ -90,6 +90,7 @@ create table tasks (
   done boolean default false,
   version bigint not null default 1
 );
+
 select * from tasks
 where version > $1
 order by version;
