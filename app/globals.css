@@ -107,6 +107,7 @@
   --accent: #6ba3ff;
   --accent-strong: #a4c7ff;
   --accent-subtle: #0562ef38;
+  --accent-foreground: var(--background);
   --success: oklch(78% 0.18 150);
   --warning: oklch(83% 0.17 80);
   --danger: oklch(76% 0.2 25);
