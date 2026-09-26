@@ -23,10 +23,10 @@
   --border: oklch(93.5% 0 0);
   --border-subtle: oklch(96.5% 0 0);
   --border-strong: oklch(82% 0 0);
-  --accent: oklch(33% 0 0);
-  --accent-strong: oklch(24% 0 0);
-  --accent-subtle: oklch(33% 0 0 / 0.1);
-  --accent-foreground: var(--background);
+  --accent: #0562ef;
+  --accent-strong: #074db7;
+  --accent-subtle: #0562ef1f;
+  --accent-foreground: #fff;
   --hover: color-mix(in oklch, var(--foreground) 6%, transparent);
   --focus-ring: transparent;
   --success: oklch(49% 0.19 150);
@@ -104,9 +104,9 @@
   --border: oklch(29% 0 0);
   --border-subtle: oklch(25% 0 0);
   --border-strong: oklch(40% 0 0);
-  --accent: oklch(80% 0 0);
-  --accent-strong: oklch(91% 0 0);
-  --accent-subtle: oklch(80% 0 0 / 0.13);
+  --accent: #6ba3ff;
+  --accent-strong: #a4c7ff;
+  --accent-subtle: #0562ef38;
   --success: oklch(78% 0.18 150);
   --warning: oklch(83% 0.17 80);
   --danger: oklch(76% 0.2 25);
