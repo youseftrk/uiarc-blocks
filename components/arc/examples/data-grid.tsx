@@ -203,8 +203,8 @@ export function DataGrid() {
             <Redo2 size={15} aria-hidden />
           </button>
           <span className={styles.popWrap}>
-            <button type="button" aria-expanded={panel === "filters"} onClick={() => setPanel(panel === "filters" ? null : "filters")}>
-              <Filter size={15} aria-hidden /> Filters{state.plan !== "all" && <span className={styles.dot} />}
+            <button type="button" aria-label="Filters" aria-expanded={panel === "filters"} onClick={() => setPanel(panel === "filters" ? null : "filters")}>
+              <Filter size={15} aria-hidden /> <span className={styles.btnLabel}>Filters</span>{state.plan !== "all" && <span className={styles.dot} />}
             </button>
             <AnimatePresence>
               {panel === "filters" && (
@@ -219,8 +219,8 @@ export function DataGrid() {
             </AnimatePresence>
           </span>
           <span className={styles.popWrap}>
-            <button type="button" aria-expanded={panel === "columns"} onClick={() => setPanel(panel === "columns" ? null : "columns")}>
-              <Columns3 size={15} aria-hidden /> Columns
+            <button type="button" aria-label="Columns" aria-expanded={panel === "columns"} onClick={() => setPanel(panel === "columns" ? null : "columns")}>
+              <Columns3 size={15} aria-hidden /> <span className={styles.btnLabel}>Columns</span>
             </button>
             <AnimatePresence>
               {panel === "columns" && (

@@ -213,8 +213,8 @@
 }
 
 .hold[data-confirmed] {
-  background: color-mix(in oklch, var(--success) 14%, var(--surface));
-  color: var(--success);
+  background: color-mix(in oklch, var(--danger) 16%, var(--surface));
+  color: var(--danger);
 }
 
 .holdFill {
