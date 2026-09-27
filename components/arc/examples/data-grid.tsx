@@ -454,8 +454,8 @@ export function DataGrid() {
   const activeBox = { x: colLeft(active.col), y: active.row * h, width: widths[visible[active.col]?.key ?? "account"] ?? 0, height: h };
   const hasRows = rows.length > 0 && visible.length > 0;
   const overPinned = (c0: number, c1: number) => visible.slice(c0, c1 + 1).every((c) => lefts[c.key] !== undefined);
-  const selectionZ = overPinned(range.c0, range.c1) ? 3 : undefined;
-  const activeZ = overPinned(active.col, active.col) ? 3 : undefined;
+  const selectionPinned = overPinned(range.c0, range.c1);
+  const activePinned = overPinned(active.col, active.col);
   const selectionLabel =
     range.r0 === range.r1 && range.c0 === range.c1
       ? `${colLetter(range.c0)}${range.r0 + 1}`
@@ -816,31 +816,41 @@ export function DataGrid() {
                   </div>
                 );
               })}
-              {hasRows && (
-                <>
-                  <motion.div
-                    className={styles.selection}
-                    aria-hidden
-                    initial={false}
-                    animate={selectionBox}
-                    transition={selectionSpring}
-                    style={{ zIndex: selectionZ }}
-                    data-multi={range.r0 !== range.r1 || range.c0 !== range.c1 || undefined}
-                  >
-                    <span
-                      className={styles.fillHandle}
-                      onPointerDown={(e) => {
-                        e.stopPropagation();
-                        gridEl.current?.focus({ preventScroll: true });
-                        dragging.current = true;
-                        setActive({ row: range.r0, col: range.c0 });
-                        setExtent({ row: range.r1, col: range.c1 });
-                      }}
-                    />
-                  </motion.div>
-                  <motion.div className={styles.activeCell} aria-hidden initial={false} animate={activeBox} transition={selectionSpring} style={{ zIndex: activeZ }} />
-                </>
-              )}
+              {hasRows &&
+                (() => {
+                  const selectionEl = (
+                    <motion.div
+                      className={styles.selection}
+                      aria-hidden
+                      initial={false}
+                      animate={selectionBox}
+                      transition={selectionSpring}
+                      data-multi={range.r0 !== range.r1 || range.c0 !== range.c1 || undefined}
+                    >
+                      <span
+                        className={styles.fillHandle}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          gridEl.current?.focus({ preventScroll: true });
+                          dragging.current = true;
+                          setActive({ row: range.r0, col: range.c0 });
+                          setExtent({ row: range.r1, col: range.c1 });
+                        }}
+                      />
+                    </motion.div>
+                  );
+                  const activeEl = <motion.div className={styles.activeCell} aria-hidden initial={false} animate={activeBox} transition={selectionSpring} />;
+                  return (
+                    <>
+                      <div className={styles.pinnedLayer} aria-hidden>
+                        {selectionPinned && selectionEl}
+                        {activePinned && activeEl}
+                      </div>
+                      {!selectionPinned && selectionEl}
+                      {!activePinned && activeEl}
+                    </>
+                  );
+                })()}
               {rows.length === 0 && <div className={styles.empty}>No rows match. Try a different search or clear a filter.</div>}
             </div>
 
