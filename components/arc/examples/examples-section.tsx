@@ -64,7 +64,6 @@ export function ExamplesSection() {
           >
             <div className={styles.mount}>{ex.node}</div>
             <div className={styles.caption}>
-              <strong>{ex.name}</strong>
               {ex.pro ? <ProBadge /> : <span className={styles.free}>Free</span>}
             </div>
           </div>
