@@ -205,7 +205,7 @@ export function DataGrid() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [checked, setChecked] = useState<Set<number>>(() => new Set());
   const [active, setActive] = useState({ row: 0, col: 0 });
-  const [anchor, setAnchor] = useState<{ row: number; col: number } | null>(null);
+  const [extent, setExtent] = useState<{ row: number; col: number } | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewportHeight, setViewportHeight] = useState(400);
   const viewport = useRef<HTMLDivElement>(null);
@@ -229,7 +229,7 @@ export function DataGrid() {
     setFiltersOpen(false);
     setChecked(new Set());
     setActive({ row: 0, col: 0 });
-    setAnchor(null);
+    setExtent(null);
   };
 
   useEffect(() => {
@@ -251,12 +251,6 @@ export function DataGrid() {
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
-
-  useEffect(() => {
-    if (!filtersOpen || !pendingFocus.current) return;
-    filterInputs.current[pendingFocus.current]?.focus();
-    pendingFocus.current = null;
-  }, [filtersOpen]);
 
   const visible = useMemo(() => {
     const shown = columns.filter((c) => !state.hidden.includes(c.key));
@@ -316,34 +310,46 @@ export function DataGrid() {
   const clampRow = (r: number) => Math.min(Math.max(0, rows.length - 1), Math.max(0, r));
   const clampCol = (c: number) => Math.min(visible.length - 1, Math.max(0, c));
 
-  const scrollRowIntoView = (r: number) => {
+  const colLeft = (ci: number) => SEL_WIDTH + visible.slice(0, ci).reduce((sum, c) => sum + widths[c.key], 0);
+
+  const scrollCellIntoView = (r: number, ci: number) => {
     const el = viewport.current;
     if (!el) return;
     const top = r * h;
     if (top < el.scrollTop) el.scrollTop = top;
     else if (top + h > el.scrollTop + bodyHeight) el.scrollTop = top + h - bodyHeight;
+    const col = visible[ci];
+    if (!col || lefts[col.key] !== undefined) return;
+    const frozen = SEL_WIDTH + Object.keys(lefts).reduce((sum, k) => sum + widths[k as ColKey], 0);
+    const left = colLeft(ci);
+    const right = left + widths[col.key];
+    if (left < el.scrollLeft + frozen) el.scrollLeft = left - frozen;
+    else if (right > el.scrollLeft + el.clientWidth) el.scrollLeft = right - el.clientWidth;
   };
 
   const moveTo = (row: number, col: number, extend: boolean) => {
     const next = { row: clampRow(row), col: clampCol(col) };
-    if (extend) setAnchor((a) => a ?? active);
-    else setAnchor(null);
-    setActive(next);
-    scrollRowIntoView(next.row);
+    if (extend) setExtent(next);
+    else {
+      setExtent(null);
+      setActive(next);
+    }
+    scrollCellIntoView(next.row, next.col);
   };
 
   const onGridKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
     if (event.target !== event.currentTarget) return;
     const page = Math.max(1, Math.floor(bodyHeight / h));
+    const cur = event.shiftKey ? (extent ?? active) : active;
     const moves: Record<string, [number, number]> = {
-      ArrowDown: [active.row + 1, active.col],
-      ArrowUp: [active.row - 1, active.col],
-      ArrowLeft: [active.row, active.col - 1],
-      ArrowRight: [active.row, active.col + 1],
-      PageDown: [active.row + page, active.col],
-      PageUp: [active.row - page, active.col],
-      Home: [event.ctrlKey || event.metaKey ? 0 : active.row, 0],
-      End: [event.ctrlKey || event.metaKey ? rows.length - 1 : active.row, visible.length - 1],
+      ArrowDown: [cur.row + 1, cur.col],
+      ArrowUp: [cur.row - 1, cur.col],
+      ArrowLeft: [cur.row, cur.col - 1],
+      ArrowRight: [cur.row, cur.col + 1],
+      PageDown: [cur.row + page, cur.col],
+      PageUp: [cur.row - page, cur.col],
+      Home: [event.ctrlKey || event.metaKey ? 0 : cur.row, 0],
+      End: [event.ctrlKey || event.metaKey ? rows.length - 1 : cur.row, visible.length - 1],
     };
     if (event.key in moves) {
       event.preventDefault();
@@ -353,11 +359,11 @@ export function DataGrid() {
       const row = rows[active.row];
       if (row) toggleChecked(row.id);
     } else if (event.key === "Escape") {
-      setAnchor(null);
+      setExtent(null);
     } else if (event.key === "a" && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
-      setAnchor({ row: 0, col: 0 });
-      setActive({ row: rows.length - 1, col: visible.length - 1 });
+      setActive({ row: 0, col: 0 });
+      setExtent({ row: rows.length - 1, col: visible.length - 1 });
     }
   };
 
@@ -387,8 +393,14 @@ export function DataGrid() {
     commit({ hidden: state.hidden.includes(key) ? state.hidden.filter((k) => k !== key) : [...state.hidden, key] });
   const openFilterFor = (key: ColKey) => {
     pendingFocus.current = key;
-    if (filtersOpen) filterInputs.current[key]?.focus();
-    else setFiltersOpen(true);
+    if (!filtersOpen) setFiltersOpen(true);
+  };
+  const focusPendingFilter = (event: Event) => {
+    const key = pendingFocus.current;
+    if (!key) return;
+    event.preventDefault();
+    pendingFocus.current = null;
+    requestAnimationFrame(() => filterInputs.current[key]?.focus());
   };
 
   const startResize = (key: ColKey) => (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -424,16 +436,15 @@ export function DataGrid() {
   };
 
   /* selection summary */
-  const range = anchor
+  const range = extent
     ? {
-        r0: Math.min(anchor.row, active.row),
-        r1: Math.max(anchor.row, active.row),
-        c0: Math.min(anchor.col, active.col),
-        c1: Math.max(anchor.col, active.col),
+        r0: Math.min(extent.row, active.row),
+        r1: Math.max(extent.row, active.row),
+        c0: Math.min(extent.col, active.col),
+        c1: Math.max(extent.col, active.col),
       }
     : { r0: active.row, r1: active.row, c0: active.col, c1: active.col };
   const inRange = (r: number, c: number) => r >= range.r0 && r <= range.r1 && c >= range.c0 && c <= range.c1;
-  const colLeft = (ci: number) => SEL_WIDTH + visible.slice(0, ci).reduce((sum, c) => sum + widths[c.key], 0);
   const selectionBox = {
     x: colLeft(range.c0),
     y: range.r0 * h,
@@ -442,6 +453,9 @@ export function DataGrid() {
   };
   const activeBox = { x: colLeft(active.col), y: active.row * h, width: widths[visible[active.col]?.key ?? "account"] ?? 0, height: h };
   const hasRows = rows.length > 0 && visible.length > 0;
+  const overPinned = (c0: number, c1: number) => visible.slice(c0, c1 + 1).every((c) => lefts[c.key] !== undefined);
+  const selectionZ = overPinned(range.c0, range.c1) ? 3 : undefined;
+  const activeZ = overPinned(active.col, active.col) ? 3 : undefined;
   const selectionLabel =
     range.r0 === range.r1 && range.c0 === range.c1
       ? `${colLetter(range.c0)}${range.r0 + 1}`
@@ -449,9 +463,10 @@ export function DataGrid() {
   const summary = useMemo(() => {
     const count = (range.r1 - range.r0 + 1) * (range.c1 - range.c0 + 1);
     const cols = visible.slice(range.c0, range.c1 + 1);
+    if (!rows.length) return { count: 0 };
     if (!cols.length || !cols.every((c) => c.kind === "number") || count < 2) return { count };
     let sum = 0;
-    for (let r = range.r0; r <= range.r1; r++) for (const c of cols) sum += rows[r]?.[c.key] as number;
+    for (let r = range.r0; r <= Math.min(range.r1, rows.length - 1); r++) for (const c of cols) sum += rows[r][c.key] as number;
     return { count, sum, avg: sum / count };
   }, [range.r0, range.r1, range.c0, range.c1, visible, rows]);
 
@@ -487,7 +502,7 @@ export function DataGrid() {
               onChange={(e) => {
                 commit({ query: e.target.value });
                 setActive({ row: 0, col: active.col });
-                setAnchor(null);
+                setExtent(null);
               }}
             />
             {state.query && (
@@ -635,7 +650,7 @@ export function DataGrid() {
                         </button>
                       </Menu.Trigger>
                       <Menu.Portal>
-                        <Menu.Content className={styles.menu} align="start" sideOffset={6} collisionPadding={10}>
+                        <Menu.Content className={styles.menu} align="start" sideOffset={6} collisionPadding={10} onCloseAutoFocus={focusPendingFilter}>
                           <Menu.Item className={styles.item} onSelect={() => setSort(c.key, "asc")}>
                             <ArrowDownAZ size={16} aria-hidden className={styles.itemIcon} />
                             Sort ascending
@@ -783,14 +798,15 @@ export function DataGrid() {
                             if (e.button !== 0) return;
                             gridEl.current?.focus({ preventScroll: true });
                             dragging.current = true;
-                            if (e.shiftKey) setAnchor((a) => a ?? active);
-                            else setAnchor(null);
-                            setActive({ row: r, col: ci });
+                            if (e.shiftKey) setExtent({ row: r, col: ci });
+                            else {
+                              setExtent(null);
+                              setActive({ row: r, col: ci });
+                            }
                           }}
                           onPointerEnter={() => {
                             if (!dragging.current) return;
-                            setAnchor((a) => a ?? active);
-                            setActive({ row: r, col: ci });
+                            setExtent({ row: r, col: ci });
                           }}
                         >
                           <span className={styles.cellText}>{typeof value === "number" && c.format ? c.format(value) : value}</span>
@@ -808,6 +824,7 @@ export function DataGrid() {
                     initial={false}
                     animate={selectionBox}
                     transition={selectionSpring}
+                    style={{ zIndex: selectionZ }}
                     data-multi={range.r0 !== range.r1 || range.c0 !== range.c1 || undefined}
                   >
                     <span
@@ -816,11 +833,12 @@ export function DataGrid() {
                         e.stopPropagation();
                         gridEl.current?.focus({ preventScroll: true });
                         dragging.current = true;
-                        setAnchor({ row: range.r0, col: range.c0 });
+                        setActive({ row: range.r0, col: range.c0 });
+                        setExtent({ row: range.r1, col: range.c1 });
                       }}
                     />
                   </motion.div>
-                  <motion.div className={styles.activeCell} aria-hidden initial={false} animate={activeBox} transition={selectionSpring} />
+                  <motion.div className={styles.activeCell} aria-hidden initial={false} animate={activeBox} transition={selectionSpring} style={{ zIndex: activeZ }} />
                 </>
               )}
               {rows.length === 0 && <div className={styles.empty}>No rows match. Try a different search or clear a filter.</div>}

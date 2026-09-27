@@ -130,7 +130,7 @@ export function AnimatedCounter({
   const reduced = useReducedMotion();
   const [previous, setPrevious] = useState(value);
   const [direction, setDirection] = useState(1);
-  if (value !== previous) {
+  if (!Object.is(value, previous)) {
     setPrevious(value);
     setDirection(value > previous ? 1 : -1);
   }
