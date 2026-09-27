@@ -11,6 +11,7 @@ import {
   Columns3,
   Download,
   EyeOff,
+  FilterX,
   ListFilter,
   Pin,
   PinOff,
@@ -21,6 +22,7 @@ import {
   Undo2,
   X,
 } from "lucide-react";
+import { motion } from "motion/react";
 import {
   useEffect,
   useLayoutEffect,
@@ -32,6 +34,8 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { AnimatedCounter } from "../animated-counter";
+import { Popover, PopoverContent, PopoverTrigger } from "../popover";
 import { cx } from "../tokens";
 import styles from "./data-grid.module.css";
 
@@ -100,8 +104,16 @@ const ROWS: Row[] = Array.from({ length: ROW_COUNT }, (_, i) => {
 });
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
-const compactMoney = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 1 });
+
+function compactParts(n: number): { value: number; suffix: string; decimals: number } {
+  const abs = Math.abs(n);
+  if (abs >= 1e9) return { value: n / 1e9, suffix: "B", decimals: 1 };
+  if (abs >= 1e6) return { value: n / 1e6, suffix: "M", decimals: 1 };
+  if (abs >= 1e3) return { value: n / 1e3, suffix: "K", decimals: 1 };
+  return { value: n, suffix: "", decimals: 0 };
+}
+
+const selectionSpring = { type: "spring", stiffness: 640, damping: 42, mass: 0.6 } as const;
 
 const columns: Column[] = [
   { key: "account", label: "Account", width: 188, kind: "text" },
@@ -157,11 +169,28 @@ function matchesNumber(expr: string, value: number) {
   }
 }
 
+const ENUM_SEP = "|";
+const NONE = "\u0000";
+
+function enumSelection(col: Column, expr: string | undefined): string[] {
+  if (!expr) return [...(col.options ?? [])];
+  if (expr === NONE) return [];
+  return expr.split(ENUM_SEP);
+}
+
+function enumLabel(col: Column, selected: string[]): string {
+  const total = col.options?.length ?? 0;
+  if (selected.length === total) return "All";
+  if (selected.length === 0) return "None";
+  if (selected.length === 1) return selected[0];
+  return `${selected.length} of ${total}`;
+}
+
 function matches(row: Row, key: ColKey, expr: string) {
   const col = byKey[key];
   const v = row[key];
   if (col.kind === "number") return typeof v === "number" && matchesNumber(expr, v);
-  if (col.kind === "enum") return !expr || v === expr;
+  if (col.kind === "enum") return !expr || (expr !== NONE && expr.split(ENUM_SEP).includes(String(v)));
   return String(v).toLowerCase().includes(expr.trim().toLowerCase());
 }
 
@@ -181,7 +210,8 @@ export function DataGrid() {
   const [viewportHeight, setViewportHeight] = useState(400);
   const viewport = useRef<HTMLDivElement>(null);
   const gridEl = useRef<HTMLDivElement>(null);
-  const filterInputs = useRef<Partial<Record<ColKey, HTMLInputElement | HTMLSelectElement | null>>>({});
+  const dragging = useRef(false);
+  const filterInputs = useRef<Partial<Record<ColKey, HTMLInputElement | HTMLButtonElement | null>>>({});
   const pendingFocus = useRef<ColKey | null>(null);
 
   const commit = (patch: Partial<GridState>) =>
@@ -201,6 +231,18 @@ export function DataGrid() {
     setActive({ row: 0, col: 0 });
     setAnchor(null);
   };
+
+  useEffect(() => {
+    const stop = () => {
+      dragging.current = false;
+    };
+    window.addEventListener("pointerup", stop);
+    window.addEventListener("pointercancel", stop);
+    return () => {
+      window.removeEventListener("pointerup", stop);
+      window.removeEventListener("pointercancel", stop);
+    };
+  }, []);
 
   useLayoutEffect(() => {
     const el = viewport.current;
@@ -391,6 +433,15 @@ export function DataGrid() {
       }
     : { r0: active.row, r1: active.row, c0: active.col, c1: active.col };
   const inRange = (r: number, c: number) => r >= range.r0 && r <= range.r1 && c >= range.c0 && c <= range.c1;
+  const colLeft = (ci: number) => SEL_WIDTH + visible.slice(0, ci).reduce((sum, c) => sum + widths[c.key], 0);
+  const selectionBox = {
+    x: colLeft(range.c0),
+    y: range.r0 * h,
+    width: colLeft(range.c1 + 1) - colLeft(range.c0),
+    height: (range.r1 - range.r0 + 1) * h,
+  };
+  const activeBox = { x: colLeft(active.col), y: active.row * h, width: widths[visible[active.col]?.key ?? "account"] ?? 0, height: h };
+  const hasRows = rows.length > 0 && visible.length > 0;
   const selectionLabel =
     range.r0 === range.r1 && range.c0 === range.c1
       ? `${colLetter(range.c0)}${range.r0 + 1}`
@@ -465,7 +516,7 @@ export function DataGrid() {
           >
             <ListFilter size={16} aria-hidden />
             <span className={styles.toolLabel}>Filter</span>
-            {filterCount > 0 && <span className={styles.dot} aria-hidden />}
+            {filterCount > 0 && <span className={styles.badge}>{filterCount}</span>}
           </button>
 
           <Menu.Root modal={false}>
@@ -617,28 +668,64 @@ export function DataGrid() {
 
             {filtersOpen && (
               <div role="row" className={styles.filterRow} style={{ top: HEAD_HEIGHT }}>
-                <div className={cx(styles.selCell, styles.filterSel)} style={{ width: SEL_WIDTH }} />
+                <div className={cx(styles.selCell, styles.filterSel)} style={{ width: SEL_WIDTH }}>
+                  <IconButton label="Clear filters" disabled={filterCount === 0} onClick={() => commit({ filters: {} })}>
+                    <FilterX size={15} aria-hidden />
+                  </IconButton>
+                </div>
                 {visible.map((c) => (
                   <div key={c.key} className={cx(styles.filterCell, pinnedClass(c))} style={cellStyle(c)}>
                     {c.kind === "enum" ? (
-                      <span className={styles.selectWrap}>
-                        <select
-                          ref={(el) => {
-                            filterInputs.current[c.key] = el;
-                          }}
-                          aria-label={`Filter ${c.label}`}
-                          value={state.filters[c.key] ?? ""}
-                          onChange={(e) => commit({ filters: { ...state.filters, [c.key]: e.target.value } })}
-                        >
-                          <option value="">All</option>
-                          {c.options?.map((o) => (
-                            <option key={o} value={o}>
-                              {o}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown size={14} aria-hidden />
-                      </span>
+                      (() => {
+                        const selected = enumSelection(c, state.filters[c.key]);
+                        const options = [...(c.options ?? [])];
+                        const setSelected = (next: string[]) =>
+                          commit({
+                            filters: {
+                              ...state.filters,
+                              [c.key]: next.length === options.length ? "" : next.length === 0 ? NONE : next.join(ENUM_SEP),
+                            },
+                          });
+                        return (
+                          <Popover modal={false}>
+                            <PopoverTrigger
+                              ref={(el) => {
+                                filterInputs.current[c.key] = el;
+                              }}
+                              className={cx(styles.enumTrigger, selected.length !== options.length && styles.enumOn)}
+                              aria-label={`Filter ${c.label}`}
+                            >
+                              <span className={styles.enumLabel}>{enumLabel(c, selected)}</span>
+                              <ChevronDown size={14} aria-hidden />
+                            </PopoverTrigger>
+                            <PopoverContent className={styles.enumMenu} align="start" sideOffset={4}>
+                              <div className={styles.enumList}>
+                                {options.map((o) => {
+                                  const on = selected.includes(o);
+                                  return (
+                                    <label key={o} className={styles.enumItem}>
+                                      <Checkbox
+                                        checked={on}
+                                        label={o}
+                                        onChange={() => setSelected(on ? selected.filter((v) => v !== o) : options.filter((v) => v === o || selected.includes(v)))}
+                                      />
+                                      <span>{o}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                              <div className={styles.enumFooter}>
+                                <button type="button" className={styles.enumAction} disabled={selected.length === options.length} onClick={() => setSelected(options)}>
+                                  Select all
+                                </button>
+                                <button type="button" className={styles.enumAction} disabled={selected.length === 0} onClick={() => setSelected([])}>
+                                  Clear
+                                </button>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      })()
                     ) : (
                       <input
                         ref={(el) => {
@@ -678,7 +765,6 @@ export function DataGrid() {
                       <Checkbox checked={isChecked} label={`Select ${row.account}`} onChange={() => toggleChecked(row.id)} />
                     </div>
                     {visible.map((c, ci) => {
-                      const isActive = isActiveRow && ci === active.col;
                       const value = row[c.key];
                       return (
                         <div
@@ -691,25 +777,52 @@ export function DataGrid() {
                             c.kind === "number" && styles.num,
                             c.key === "account" && styles.strong,
                             pinnedClass(c),
-                            inRange(r, ci) && styles.inRange,
-                            isActive && styles.activeCell,
                           )}
                           style={cellStyle(c)}
                           onPointerDown={(e) => {
+                            if (e.button !== 0) return;
                             gridEl.current?.focus({ preventScroll: true });
+                            dragging.current = true;
                             if (e.shiftKey) setAnchor((a) => a ?? active);
                             else setAnchor(null);
                             setActive({ row: r, col: ci });
                           }}
+                          onPointerEnter={() => {
+                            if (!dragging.current) return;
+                            setAnchor((a) => a ?? active);
+                            setActive({ row: r, col: ci });
+                          }}
                         >
                           <span className={styles.cellText}>{typeof value === "number" && c.format ? c.format(value) : value}</span>
-                          {isActive && <span className={styles.fillHandle} aria-hidden />}
                         </div>
                       );
                     })}
                   </div>
                 );
               })}
+              {hasRows && (
+                <>
+                  <motion.div
+                    className={styles.selection}
+                    aria-hidden
+                    initial={false}
+                    animate={selectionBox}
+                    transition={selectionSpring}
+                    data-multi={range.r0 !== range.r1 || range.c0 !== range.c1 || undefined}
+                  >
+                    <span
+                      className={styles.fillHandle}
+                      onPointerDown={(e) => {
+                        e.stopPropagation();
+                        gridEl.current?.focus({ preventScroll: true });
+                        dragging.current = true;
+                        setAnchor({ row: range.r0, col: range.c0 });
+                      }}
+                    />
+                  </motion.div>
+                  <motion.div className={styles.activeCell} aria-hidden initial={false} animate={activeBox} transition={selectionSpring} />
+                </>
+              )}
               {rows.length === 0 && <div className={styles.empty}>No rows match. Try a different search or clear a filter.</div>}
             </div>
 
@@ -718,11 +831,20 @@ export function DataGrid() {
               {visible.map((c, i) => (
                 <div key={c.key} role="gridcell" className={cx(styles.sumCell, c.kind === "number" && styles.num, pinnedClass(c))} style={cellStyle(c)}>
                   {i === 0 && !c.agg ? (
-                    <span className={styles.sumMuted}>{rows.length.toLocaleString("en-US")} rows</span>
+                    <span className={styles.sumMuted}>{rowCountLabel}</span>
                   ) : c.agg ? (
                     <>
                       <span className={styles.sumMuted}>{c.agg === "sum" ? "Sum" : "Avg"}</span>
-                      <strong>{c.key === "arr" ? compactMoney.format(aggregates[c.key] ?? 0) : c.key === "health" ? `${Math.round(aggregates[c.key] ?? 0)}%` : compact.format(aggregates[c.key] ?? 0)}</strong>
+                      <strong>
+                        {c.key === "health" ? (
+                          <AnimatedCounter value={Math.round(aggregates[c.key] ?? 0)} suffix="%" />
+                        ) : (
+                          (() => {
+                            const parts = compactParts(aggregates[c.key] ?? 0);
+                            return <AnimatedCounter value={parts.value} prefix={c.key === "arr" ? "$" : ""} suffix={parts.suffix} decimals={parts.decimals} />;
+                          })()
+                        )}
+                      </strong>
                     </>
                   ) : null}
                 </div>
@@ -732,25 +854,31 @@ export function DataGrid() {
         </div>
 
         <div className={styles.status}>
-          <span className={styles.selection} aria-label={`Selection ${selectionLabel}`}>
+          <span className={styles.address} aria-label={`Selection ${selectionLabel}`}>
             {selectionLabel}
-          </span>
-          <span className={styles.stat}>
-            <span className={styles.statLabel}>Count</span>
-            <strong>{summary.count.toLocaleString("en-US")}</strong>
           </span>
           {summary.sum !== undefined && (
             <>
               <span className={styles.stat}>
                 <span className={styles.statLabel}>Sum</span>
-                <strong>{summary.sum.toLocaleString("en-US")}</strong>
+                <strong>
+                  <AnimatedCounter value={Math.round(summary.sum)} />
+                </strong>
               </span>
               <span className={styles.stat}>
-                <span className={styles.statLabel}>Avg</span>
-                <strong>{(summary.avg ?? 0).toLocaleString("en-US", { maximumFractionDigits: 1 })}</strong>
+                <span className={styles.statLabel}>Average</span>
+                <strong>
+                  <AnimatedCounter value={summary.avg ?? 0} decimals={1} />
+                </strong>
               </span>
             </>
           )}
+          <span className={styles.stat}>
+            <span className={styles.statLabel}>Count</span>
+            <strong>
+              <AnimatedCounter value={summary.count} />
+            </strong>
+          </span>
           <span className={styles.spacer} />
           {checked.size > 0 && (
             <span className={styles.stat}>
