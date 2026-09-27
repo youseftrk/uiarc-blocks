@@ -1,0 +1,452 @@
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+/* Switch */
+.switchRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: min(100%, 320px);
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow-resting);
+}
+
+.switchText {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.switchText small {
+  font-weight: 400;
+  font-size: var(--text-xs);
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  width: 44px;
+  height: 26px;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--neutral-4);
+  cursor: pointer;
+  transition: background var(--duration-standard) var(--ease-standard);
+}
+
+.switch:hover {
+  background: var(--neutral-5);
+}
+
+.switch[data-state="checked"] {
+  justify-content: flex-end;
+  background: var(--accent);
+}
+
+.switch:focus-visible,
+.copy:focus-visible,
+.hold:focus-visible,
+.pill:focus-visible,
+.add:focus-visible,
+.sliderThumb:focus-visible,
+.numberControl button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.thumb {
+  display: block;
+  height: 20px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.25);
+}
+
+/* Slider */
+.slider {
+  display: grid;
+  gap: 14px;
+  width: min(100%, 260px);
+}
+
+.sliderHead {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.sliderValue {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.sliderTrack {
+  position: relative;
+  height: 28px;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.sliderTrack::before,
+.sliderFill {
+  content: "";
+  position: absolute;
+  inset-block: 11px;
+  left: 0;
+  border-radius: 999px;
+}
+
+.sliderTrack::before {
+  right: 0;
+  background: var(--neutral-3);
+}
+
+.sliderFill {
+  background: var(--accent);
+}
+
+.sliderThumb {
+  position: absolute;
+  top: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.28);
+  transform: translate(-50%, -50%);
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.sliderTrack[data-dragging] .sliderThumb {
+  transform: translate(-50%, -50%) scale(1.15);
+}
+
+/* Copy */
+.command {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 6px 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.command code {
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copy {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.copy:hover {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.copy[data-state="copied"] {
+  color: var(--success);
+}
+
+.copy[data-state="error"] {
+  color: var(--danger);
+}
+
+.copyIcon {
+  display: grid;
+  grid-area: 1 / 1;
+}
+
+/* Hold */
+.hold {
+  position: relative;
+  overflow: hidden;
+  height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--danger) 12%, var(--surface));
+  color: var(--danger);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  user-select: none;
+  touch-action: none;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.hold[data-holding] {
+  transform: scale(0.97);
+}
+
+.hold[data-confirmed] {
+  background: color-mix(in oklch, var(--success) 14%, var(--surface));
+  color: var(--success);
+}
+
+.holdFill {
+  position: absolute;
+  inset: 0;
+  background: var(--danger);
+  transform-origin: left;
+}
+
+.holdFace {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  mix-blend-mode: normal;
+}
+
+.hold[data-holding] .holdFace {
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+/* Reactions */
+.reactions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.pill,
+.add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.pill[aria-pressed="true"] {
+  border-color: color-mix(in oklch, var(--accent) 45%, transparent);
+  background: var(--accent-subtle);
+  color: var(--accent-strong);
+}
+
+.addWrap {
+  position: relative;
+}
+
+.add {
+  position: relative;
+  color: var(--text-secondary);
+}
+
+.addPlus {
+  position: absolute;
+  top: 5px;
+  right: 6px;
+}
+
+.picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: 10;
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  translate: -50% 0;
+  border-radius: 999px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-floating);
+}
+
+.picker button {
+  display: grid;
+  place-items: center;
+  color: var(--foreground);
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.picker button:hover,
+.picker button:focus-visible {
+  outline: none;
+  background: var(--hover);
+  transform: scale(1.18);
+}
+
+/* Number field */
+.numberField {
+  display: grid;
+  gap: 8px;
+  width: min(100%, 220px);
+  font-size: var(--text-sm);
+}
+
+.numberField label {
+  font-weight: 500;
+}
+
+.numberControl {
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.numberControl:focus-within {
+  border-color: var(--accent);
+}
+
+.numberControl button {
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.numberControl button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.numberValue {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.numberValue input {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  outline: none;
+}
+
+.numberValue input:focus {
+  color: var(--foreground);
+}
+
+.numberValue:has(input:focus) .numberDisplay {
+  visibility: hidden;
+}
+
+.numberDisplay {
+  position: absolute;
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.hint {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+/* Word rotate */
+.rotate {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(24px, 2.4vw, 32px);
+  letter-spacing: var(--tracking-display);
+  white-space: nowrap;
+}
+
+.rotateFrame {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.rotateWord {
+  display: inline-flex;
+}
+
+.rotateChar {
+  display: inline-block;
+}
+
+.sliderValue,
+.pillCount {
+  --text-3xl: var(--text-sm);
+  display: inline-flex;
+}
+
+.sliderValue :global(*),
+.pillCount :global(*),
+.numberDisplay :global(*) {
+  font-family: var(--font-body);
+  font-weight: 500;
+}
+
+.numberDisplay {
+  --text-3xl: var(--text-base);
+}
+
+.command code {
+  min-width: 0;
+}
+
+.command {
+  width: 100%;
+}
+
+.command code {
+  flex: 1;
+}

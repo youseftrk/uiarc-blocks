@@ -1,0 +1,125 @@
+.card {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 720px;
+  padding: 22px;
+  border-radius: 22px;
+  background: var(--surface);
+  box-shadow: var(--shadow-resting);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title,
+.note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.readout {
+  margin: 4px 0;
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-display);
+}
+
+.plot {
+  position: relative;
+  height: 220px;
+  cursor: crosshair;
+  touch-action: none;
+  outline: none;
+  border-radius: 8px;
+}
+
+.plot:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.grid {
+  stroke: var(--border-subtle);
+  stroke-dasharray: 2 4;
+}
+
+.current,
+.previous {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.25;
+}
+
+.current {
+  stroke: var(--accent);
+}
+
+.previous {
+  stroke: var(--neutral-6);
+  stroke-dasharray: 4 5;
+  stroke-width: 1.5;
+}
+
+.crosshair {
+  position: absolute;
+  inset-block: 0;
+  width: 1px;
+  background: var(--border-strong);
+  pointer-events: none;
+}
+
+.dot {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--surface);
+  border-radius: 999px;
+  background: var(--accent);
+  translate: -50% -50%;
+  pointer-events: none;
+}
+
+.axis,
+.legend {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.legend {
+  justify-content: flex-start;
+  gap: 16px;
+  color: var(--text-secondary);
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch,
+.swatchDashed {
+  width: 14px;
+  height: 0;
+  border-top: 2px solid var(--accent);
+}
+
+.swatchDashed {
+  border-top: 2px dashed var(--neutral-6);
+}

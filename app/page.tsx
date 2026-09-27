@@ -3,6 +3,7 @@ import { AgentRun } from "@/components/arc/blocks/agent-run";
 import { AiChat } from "@/components/arc/blocks/ai-chat";
 import { InvitePeople } from "@/components/arc/blocks/invite-people";
 import { WalletCard } from "@/components/arc/blocks/wallet-card";
+import { ExamplesSection } from "@/components/arc/examples/examples-section";
 import styles from "./page.module.css";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -17,6 +18,7 @@ export default function Home() {
   return (
     <div className={styles.page}>
       <main>
+        <ExamplesSection />
         <section className={styles.section} id="blocks" aria-labelledby="blocks-title">
           <div className={styles.head}>
             <div className={styles.headRow}>

@@ -1,0 +1,253 @@
+.grid {
+  display: grid;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-resting);
+  font-size: 13px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.title {
+  margin: 0 6px 0 0;
+  font-weight: 500;
+  font-size: var(--text-base);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1 1 180px;
+  max-width: 280px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-muted);
+}
+
+.search:focus-within {
+  border-color: var(--accent);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  outline: none;
+}
+
+.actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.actions > button,
+.popWrap > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  min-width: 32px;
+  justify-content: center;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  cursor: pointer;
+}
+
+.actions button:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--foreground);
+}
+
+.actions button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.actions button:focus-visible,
+.table:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -2px;
+}
+
+.popWrap {
+  position: relative;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.pop {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  display: grid;
+  min-width: 160px;
+  padding: 6px;
+  border-radius: 14px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-floating);
+}
+
+.pop button,
+.pop label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.pop button:hover,
+.pop label:hover {
+  background: var(--hover);
+}
+
+.pop button[aria-checked="true"] {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.viewport {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.table {
+  min-width: max-content;
+  outline: none;
+}
+
+.row {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: grid;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.row[aria-selected="true"] {
+  background: var(--accent-subtle);
+}
+
+.head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  height: 36px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.head button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding: 0 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums;
+}
+
+.numeric {
+  justify-content: flex-end;
+}
+
+.active {
+  box-shadow: inset 0 0 0 2px var(--accent);
+  border-radius: 4px;
+}
+
+.health {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.meter {
+  width: 36px;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--neutral-3);
+}
+
+.meter span {
+  display: block;
+  height: 100%;
+}
+
+.plan {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  font-size: 12px;
+}
+
+.plan[data-plan="Enterprise"] {
+  background: var(--accent-subtle);
+  color: var(--accent-strong);
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 10px 14px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.footer span:first-child {
+  margin-right: auto;
+}
+
+.footer strong {
+  color: var(--foreground);
+  font-weight: 500;
+}
