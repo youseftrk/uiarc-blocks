@@ -1,0 +1,293 @@
+/* Wallet */
+.walletWrap {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.wallet {
+  position: relative;
+  width: min(100%, 320px);
+  height: 250px;
+  transition: height var(--duration-considered) var(--ease-enter);
+}
+
+.wallet[data-expanded] {
+  height: 430px;
+}
+
+.walletCard {
+  position: absolute;
+  inset: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  aspect-ratio: 1.586;
+  padding: 18px 20px;
+  border: 0;
+  border-radius: 18px;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.18);
+  transform-origin: top center;
+}
+
+.walletCard:focus-visible,
+.flowStage:focus-visible,
+.tool:focus-visible,
+.flowControls button:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.cardTop,
+.cardBottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm);
+}
+
+.cardTop span,
+.cardBottom span:last-child {
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+.chip {
+  width: 34px;
+  height: 26px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #f3dfa0, #b99a4b);
+}
+
+.hint,
+.flowTitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+/* Cover flow */
+.flow {
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  width: 100%;
+}
+
+.flowTitle {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.flowStage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 300px;
+  overflow: hidden;
+  perspective: 900px;
+  border-radius: 16px;
+}
+
+.flowCard {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  width: 200px;
+  height: 260px;
+  padding: 14px;
+  border: 0;
+  border-radius: 18px;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: grab;
+  box-shadow: 0 18px 40px -18px rgb(0 0 0 / 0.5);
+  -webkit-box-reflect: below 4px linear-gradient(transparent 70%, rgb(0 0 0 / 0.18));
+}
+
+.flowCaption {
+  display: grid;
+  gap: 2px;
+  font-size: var(--text-sm);
+}
+
+.flowCaption span {
+  opacity: 0.8;
+  font-size: var(--text-xs);
+}
+
+.flowControls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.flowControls button {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+.flowControls button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Dock / board */
+.board {
+  position: relative;
+  width: 100%;
+  height: 520px;
+  overflow: hidden;
+  border-radius: 20px;
+  background-color: var(--surface);
+  background-image: radial-gradient(var(--border) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.board[data-tool="hand"] {
+  cursor: grab;
+}
+
+.board[data-tool="rect"],
+.board[data-tool="text"],
+.board[data-tool="note"],
+.board[data-tool="comment"] {
+  cursor: crosshair;
+}
+
+.boardCard {
+  position: absolute;
+  display: flex;
+  align-items: flex-end;
+  width: 26%;
+  aspect-ratio: 4 / 5;
+  padding: 10px;
+  border-radius: 12px;
+  color: #fff;
+  font-size: var(--text-xs);
+  box-shadow: var(--shadow-raised);
+  cursor: grab;
+  touch-action: none;
+}
+
+.comment {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  max-width: 200px;
+  padding: 10px 12px;
+  border-radius: 14px 14px 14px 4px;
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-floating);
+  font-size: var(--text-xs);
+}
+
+.comment p {
+  margin: 0;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-foreground);
+  font-size: 11px;
+}
+
+.dock {
+  position: absolute;
+  bottom: 18px;
+  left: 50%;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 6px;
+  translate: -50% 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: color-mix(in oklch, var(--surface-raised) 86%, transparent);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-floating);
+}
+
+.tool {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transform-origin: bottom center;
+}
+
+.tool:hover {
+  color: var(--foreground);
+}
+
+.toolActive {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.toolActive:hover {
+  color: var(--accent-foreground);
+}
+
+.badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 10px;
+  line-height: 15px;
+}
+
+.tip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  translate: -50% 0;
+  padding: 4px 8px;
+  border-radius: 8px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.tip kbd {
+  margin-left: 4px;
+  opacity: 0.6;
+  font-family: var(--font-mono);
+}

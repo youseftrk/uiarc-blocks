@@ -1,0 +1,38 @@
+.badge {
+  display:inline-flex;
+  flex:none;
+  align-items:center;
+  justify-content:center;
+  height:18px;
+  padding:0 7px;
+  border:1px solid transparent;
+  border-radius:9999px;
+  background:var(--arc-gradient-soft) padding-box,var(--arc-gradient-line) border-box;
+  font-family:var(--font-body,system-ui),sans-serif;
+  font-size:11px;
+  font-weight:500;
+  line-height:1;
+  letter-spacing:0;
+  white-space:nowrap;
+  vertical-align:middle;
+  user-select:none}
+.label {
+  background:var(--arc-gradient-ink);
+  background-clip:text;
+  -webkit-background-clip:text;
+  color:var(--foreground);
+  -webkit-text-fill-color:transparent}
+.md {
+  height:22px;
+  padding:0 9px;
+  font-size:12px}
+@media (forced-colors:active) {
+  .badge {
+  border-color:CanvasText;
+  background:Canvas}
+.label {
+  background:none;
+  color:CanvasText;
+  -webkit-text-fill-color:CanvasText}
+}
+

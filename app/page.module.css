@@ -1,150 +1,224 @@
 .page {
-  --background: #fafafa;
-  --foreground: #fff;
-
-  --text-primary: #000;
-  --text-secondary: #666;
-
-  --button-primary-hover: #383838;
-  --button-secondary-hover: #f2f2f2;
-  --button-secondary-border: #ebebeb;
-
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-geist-sans);
-  background-color: var(--background);
+  --gutter: clamp(16px, 4vw, 48px);
+  --content: min(100% - var(--gutter) * 2, 1408px);
+  --stage: var(--surface-muted);
+  min-height: 100dvh;
+  padding-bottom: clamp(96px, 10vw, 160px);
+  background: var(--background);
+  color: var(--foreground);
 }
 
-.main {
-  display: flex;
-  flex: 1;
-  width: 100%;
-  max-width: 800px;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: space-between;
-  background-color: var(--foreground);
-  padding: 120px 60px;
+:global(:root[data-theme="dark"]) .page {
+  --stage: oklch(19.5% 0 0);
 }
 
-.intro {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  gap: 24px;
+.section {
+  position: relative;
+  z-index: 1;
+  width: var(--content);
+  margin-inline: auto;
+  padding-top: clamp(96px, 10vw, 160px);
+  scroll-margin-top: 24px;
 }
 
-.intro h1 {
-  max-width: 320px;
-  font-size: 40px;
-  font-weight: 600;
-  line-height: 48px;
-  letter-spacing: -2.4px;
-  text-wrap: balance;
-  color: var(--text-primary);
+.section:focus-within,
+.section:has([aria-expanded="true"]),
+.section:has([data-state="open"]) {
+  z-index: 2;
 }
 
-.intro p {
-  max-width: 440px;
-  font-size: 18px;
-  line-height: 32px;
-  text-wrap: balance;
-  color: var(--text-secondary);
-}
-
-.intro a {
-  font-weight: 500;
-  color: var(--text-primary);
-}
-
-.ctas {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
-  max-width: 440px;
+.head {
+  display: grid;
   gap: 16px;
-  font-size: 14px;
+  max-width: 720px;
+  margin-bottom: clamp(56px, 5.5vw, 80px);
 }
 
-.ctas a {
+.head h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(var(--text-3xl), 3.8vw, var(--text-4xl));
+  font-weight: 400;
+  letter-spacing: var(--tracking-display);
+  line-height: 1.12;
+  text-wrap: balance;
+  animation: rise 0.9s var(--ease-enter) both;
+}
+
+.head p {
+  max-width: 52ch;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.8;
+  text-wrap: pretty;
+  animation: rise 0.9s var(--ease-enter) both;
+  animation-delay: 0.12s;
+}
+
+.headRow {
   display: flex;
-  justify-content: center;
   align-items: center;
-  height: 40px;
-  padding: 0 16px;
-  border-radius: 128px;
-  border: 1px solid transparent;
-  transition: 0.2s;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-sm);
   cursor: pointer;
-  width: fit-content;
+  transition: background var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.theme:hover {
+  background: var(--surface-muted);
+}
+
+.theme:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.blocks {
+  --row: 144px;
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: 16px;
+}
+
+.show {
+  position: relative;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-column: span var(--w, 6);
+  min-width: 0;
+  padding: 24px 20px 0;
+  overflow: clip;
+  border-radius: 28px;
+  background: var(--stage);
+}
+
+.mount {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.mountInner {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  animation: mountIn 0.8s var(--ease-enter) both;
+}
+
+.mountInner > * {
+  max-width: 100%;
+}
+
+.agentRun {
+  min-height: 740px;
+  align-items: start;
+}
+
+.walletCard {
+  min-height: 860px;
+}
+
+.aiChat,
+.invitePeople {
+  min-height: 700px;
+}
+
+.caption {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 6px 20px;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.caption strong {
+  color: var(--foreground);
   font-weight: 500;
 }
 
-a.primary {
-  background: var(--text-primary);
-  color: var(--background);
-  gap: 8px;
-}
-
-a.secondary {
-  border-color: var(--button-secondary-border);
-}
-
-/* Enable hover only on non-touch devices */
-@media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
-    background: var(--button-primary-hover);
-    border-color: transparent;
+@keyframes rise {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
   }
-
-  a.secondary:hover {
-    background: var(--button-secondary-hover);
-    border-color: transparent;
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-@media (max-width: 600px) {
-  .main {
-    padding: 48px 24px;
+@keyframes mountIn {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.985);
   }
-
-  .intro {
-    gap: 16px;
-  }
-
-  .intro h1 {
-    font-size: 32px;
-    line-height: 40px;
-    letter-spacing: -1.92px;
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  .logo {
-    filter: invert();
+@media (max-width: 1100px) {
+  .blocks {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-
-  .page {
-    --background: #000;
-    --foreground: #000;
-
-    --text-primary: #ededed;
-    --text-secondary: #999;
-
-    --button-primary-hover: #ccc;
-    --button-secondary-hover: #1a1a1a;
-    --button-secondary-border: #1a1a1a;
+  .show {
+    grid-column: span 6;
   }
 }
 
-.code {
-  font-family: var(--font-geist-mono);
-  font-size: 0.9em;
-  background: color-mix(in srgb, currentColor 8%, transparent);
-  padding: 0.1em 0.4em;
-  border-radius: 6px;
+@media (max-width: 720px) {
+  .blocks {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+  .show {
+    grid-column: auto;
+    padding: 12px 12px 0;
+    border-radius: 24px;
+  }
+  .agentRun {
+    min-height: 900px;
+  }
+  .walletCard {
+    min-height: 800px;
+  }
+  .section {
+    padding-top: 72px;
+  }
+  .head {
+    margin-bottom: 44px;
+  }
+  .head h1 {
+    font-size: var(--text-3xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .head h1,
+  .head p,
+  .mountInner {
+    animation: none;
+  }
 }

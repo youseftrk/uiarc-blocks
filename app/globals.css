@@ -1,49 +1,155 @@
+/* UIarc design tokens (light + dark). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --neutral-0: oklch(100% 0 0);
+  --neutral-1: oklch(99% 0 0);
+  --neutral-2: oklch(97.8% 0 0);
+  --neutral-3: oklch(95.8% 0 0);
+  --neutral-4: oklch(91.5% 0 0);
+  --neutral-5: oklch(84% 0 0);
+  --neutral-6: oklch(72% 0 0);
+  --neutral-7: oklch(59% 0 0);
+  --neutral-8: oklch(46% 0 0);
+  --neutral-9: oklch(34% 0 0);
+  --neutral-10: oklch(23% 0 0);
+  --neutral-11: oklch(15% 0 0);
+  --background: var(--neutral-0);
+  --surface: var(--neutral-0);
+  --surface-raised: var(--neutral-0);
+  --surface-muted: var(--neutral-2);
+  --foreground: var(--neutral-11);
+  --text-secondary: var(--neutral-8);
+  --text-muted: var(--neutral-7);
+  --border: oklch(93.5% 0 0);
+  --border-subtle: oklch(96.5% 0 0);
+  --border-strong: oklch(82% 0 0);
+  --accent: #0562ef;
+  --accent-strong: #074db7;
+  --accent-subtle: #0562ef1f;
+  --accent-foreground: #fff;
+  --hover: color-mix(in oklch, var(--foreground) 6%, transparent);
+  --focus-ring: transparent;
+  --success: oklch(49% 0.19 150);
+  --warning: oklch(58% 0.18 75);
+  --danger: oklch(54% 0.21 25);
+  --shadow-resting: 0 1px 2px oklch(0% 0 0 / 0.035);
+  --shadow-raised: 0 6px 18px oklch(0% 0 0 / 0.065), 0 1px 3px oklch(0% 0 0 / 0.035);
+  --shadow-floating: 0 20px 48px oklch(0% 0 0 / 0.105), 0 3px 10px oklch(0% 0 0 / 0.045);
+  --arc-gradient-from: oklch(90% 0.045 300);
+  --arc-gradient-to: oklch(92% 0.045 65);
+  --arc-gradient: linear-gradient(100deg, var(--arc-gradient-from), var(--arc-gradient-to));
+  --arc-gradient-foreground: oklch(22% 0.01 300);
+  --arc-gradient-soft: linear-gradient(135deg, oklch(97.5% 0.016 300), oklch(98% 0.016 65));
+  --arc-gradient-line: linear-gradient(100deg, oklch(83% 0.06 300), oklch(86% 0.06 65));
+  --arc-gradient-ink: linear-gradient(100deg, oklch(47% 0.1 300), oklch(50% 0.09 55));
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --radius-control: 1.125rem;
+  --radius-panel: 1.625rem;
+  --radius-surface: 2.125rem;
+  --radius-pill: 9999px;
+  --control-height-sm: 2.25rem;
+  --control-height-md: 2.75rem;
+  --control-height-lg: 3.125rem;
+  --font-display: var(--font-geist, "Geist Variable"), sans-serif;
+  --font-body: var(--font-inter, "Inter Variable"), sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-4xl: 3.25rem;
+  --text-5xl: 4.5rem;
+  --tracking-display: -0.03em;
+  --tracking-body: -0.01em;
+  --leading-display: 1.1;
+  --leading-body: 1.4;
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: linear(0, 0.0258, 0.09, 0.1763, 0.2732, 0.3724, 0.4683, 0.5573, 0.6376, 0.7082, 0.7689, 0.8202, 0.8628, 0.8976, 0.9256, 0.9476, 0.9648, 0.9778, 0.9875, 0.9945, 0.9994, 1.0026, 1.0047, 1.0058, 1.0062, 1.0062, 1.0059, 1.0055, 1.0049, 1.0043, 1.0036, 1.0031, 1.0025, 1.002, 1.0016, 1.0013, 1);
+  --duration-instant: 0.12s;
+  --duration-fast: 0.16s;
+  --duration-standard: 0.24s;
+  --duration-considered: 0.48s;
+  --duration-spring: 0.58s;
+
+  color: var(--foreground);
+  font-family: var(--font-body);
+  letter-spacing: var(--tracking-body);
+  -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: oklch(19% 0 0);
+  --surface: oklch(21.5% 0 0);
+  --surface-raised: oklch(24% 0 0);
+  --surface-muted: oklch(26% 0 0);
+  --foreground: oklch(96% 0 0);
+  --text-secondary: oklch(77% 0 0);
+  --text-muted: oklch(64% 0 0);
+  --border: oklch(29% 0 0);
+  --border-subtle: oklch(25% 0 0);
+  --border-strong: oklch(40% 0 0);
+  --accent: #6ba3ff;
+  --accent-strong: #a4c7ff;
+  --accent-subtle: #0562ef38;
+  --accent-foreground: var(--background);
+  --success: oklch(78% 0.18 150);
+  --warning: oklch(83% 0.17 80);
+  --danger: oklch(76% 0.2 25);
+  --shadow-resting: 0 1px 2px oklch(0% 0 0 / 0.18);
+  --shadow-raised: 0 8px 22px oklch(0% 0 0 / 0.22);
+  --shadow-floating: 0 22px 55px oklch(0% 0 0 / 0.34);
+  --arc-gradient-from: oklch(38% 0.05 300);
+  --arc-gradient-to: oklch(40% 0.045 60);
+  --arc-gradient-foreground: oklch(96% 0.005 300);
+  --arc-gradient-soft: linear-gradient(135deg, oklch(23.5% 0.016 300), oklch(24% 0.014 65));
+  --arc-gradient-line: linear-gradient(100deg, oklch(48% 0.06 300), oklch(52% 0.055 65));
+  --arc-gradient-ink: linear-gradient(100deg, oklch(82% 0.07 300), oklch(86% 0.065 70));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea {
+  font-family: inherit;
+}
+
+img {
+  max-width: 100%;
 }
 
 html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-  padding: 0;
   margin: 0;
-}
-
-a {
-  color: inherit;
-  text-decoration: none;
-}
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 400;
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
 }
