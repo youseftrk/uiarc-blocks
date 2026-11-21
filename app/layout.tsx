@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Inter } from "next/font/google";
+import "../components/arc/foundation.css";
 import "./globals.css";
 import { ThemeScript } from "./theme-script";
 
