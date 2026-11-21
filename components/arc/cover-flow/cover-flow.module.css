@@ -1,0 +1,31 @@
+.root { display: grid; width: 100%; min-width: 0px; gap: var(--space-4); container-type: inline-size; color: var(--foreground); font-family: var(--font-body); letter-spacing: var(--tracking-body); }
+.stage { --flow-card: clamp(148px,31cqw,228px); --flow-height: calc(var(--flow-card) * 1.25); --flow-radius: calc(var(--flow-card) * .085); --flow-top: 8px; --flow-mirror: calc(var(--flow-height) * .15); --flow-floor: calc(var(--flow-mirror) + 12px); --flow-contact: .36; --flow-ambient: .14; --flow-reflect: .28; --flow-contact-k: .62; --flow-veil: oklch(0% 0 0/.62); position: relative; display: grid; height: calc(var(--flow-top) + var(--flow-height) + var(--flow-floor)); perspective: calc(var(--flow-card) * 3.4); perspective-origin: 50% calc(var(--flow-top) + var(--flow-height)); overflow: clip visible; place-items: center; cursor: grab; touch-action: pan-y; overscroll-behavior-x: contain; user-select: none; -webkit-tap-highlight-color: transparent; }
+.stage[data-dragging] { cursor: grabbing; }
+.sizer { width: var(--flow-card); height: 0px; visibility: hidden; grid-area: 1 / 1; }
+.card { position: absolute; top: var(--flow-top); left: calc(50% - var(--flow-card) / 2); width: var(--flow-card); height: var(--flow-height); cursor: pointer; will-change: transform; transform: translateZ(0px); transform-origin: 50% 50%; backface-visibility: hidden; }
+.card[data-active] { cursor: inherit; }
+.ambient { position: absolute; inset: 6% -3% -4%; background: radial-gradient(closest-side,oklch(0 0 0/var(--flow-ambient)),oklch(0 0 0/calc(var(--flow-ambient) * .4)) 55%,transparent); pointer-events: none; }
+.contact { position: absolute; top: calc(100% - 7px); right: 5%; left: 5%; height: 16px; background: radial-gradient(closest-side,oklch(0 0 0/calc(var(--flow-contact) * var(--flow-contact-k))),oklch(0 0 0/calc(var(--flow-contact) * var(--flow-contact-k) * .35)) 60%,transparent); pointer-events: none; }
+.reflection { position: absolute; top: calc(100% + 2px); right: 0px; left: 0px; height: var(--flow-mirror); overflow: hidden; border-radius: var(--flow-radius) var(--flow-radius) 0 0; pointer-events: none; will-change: opacity; mask-image: linear-gradient(oklch(0 0 0/var(--flow-reflect)),transparent 88%); }
+.reflection .image { bottom: auto; height: var(--flow-height); border-radius: 0px; transform: scaleY(-1); }
+.face { position: absolute; inset: 0px; border-radius: var(--flow-radius); background: var(--surface-muted); }
+.face::after { position: absolute; inset: 0px; border-radius: inherit; box-shadow: inset 0 0 0 1px color-mix(in oklab,var(--foreground) 8%,transparent); content: ""; pointer-events: none; }
+.image { width: 100%; height: 100%; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+.edge, .image, .veil { position: absolute; inset: 0px; border-radius: var(--flow-radius); pointer-events: none; }
+.edge, .veil { will-change: opacity; }
+.veil { background: var(--flow-veil); }
+.footer { display: grid; justify-items: center; gap: var(--space-3); padding-inline: var(--space-4); }
+.caption { display: grid; width: 100%; min-height: 3rem; justify-items: center; text-align: center; }
+.captionItem { display: grid; justify-items: center; align-content: start; gap: 2px; grid-area: 1 / 1; will-change: opacity, transform; }
+.title { margin: 0px; color: var(--foreground); font-size: var(--text-lg); font-weight: 500; line-height: 1.3; }
+.subtitle { margin: 0px; color: var(--text-secondary); font-size: var(--text-sm); line-height: var(--leading-body); }
+.ticks { position: relative; display: flex; height: 24px; align-items: center; }
+.tick { position: relative; width: 16px; height: 24px; padding: 0px; border: 0px; background: none; cursor: pointer; }
+.tick::before { position: absolute; top: 50%; left: 50%; width: 5px; height: 5px; margin: -2.5px 0px 0px -2.5px; border-radius: 50%; background: color-mix(in oklab,var(--foreground) 22%,transparent); content: ""; transition: background-color var(--duration-fast) var(--ease-standard); }
+.thumb { position: absolute; top: 50%; left: 2px; width: 12px; height: 5px; margin-top: -2.5px; border-radius: var(--radius-pill); background: var(--foreground); pointer-events: none; will-change: transform; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) { .tick:hover::before { background: color-mix(in oklab,var(--foreground) 45%,transparent); } }
+@container (max-width: 520px) { .stage { --flow-card: clamp(148px,54cqw,228px); --flow-floor: 22px; --flow-contact-k: 1; } }
+@container (max-width: 520px) { .reflection { display: none; } }
+.root[data-reduced] .stage { cursor: default; }
+:global(:root[data-theme="dark"]) .stage { --flow-contact: .66; --flow-ambient: .34; --flow-reflect: .18; --flow-veil: oklch(0% 0 0/.9); }

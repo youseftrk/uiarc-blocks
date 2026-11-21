@@ -1,0 +1,20 @@
+.demo { display: grid; width: min(100%, 720px); min-width: 0px; justify-items: center; gap: var(--space-4); padding-bottom: var(--space-2); font-family: var(--font-body); letter-spacing: var(--tracking-body); container-type: inline-size; }
+.title { margin: 0px; color: var(--foreground); font-size: var(--text-lg); font-weight: 500; line-height: 1.3; }
+.subtitle { margin: 0px; color: var(--text-secondary); font-size: var(--text-sm); line-height: var(--leading-body); }
+.details { display: grid; width: min(100%, 540px); grid-template-columns: minmax(0px, 1fr) auto; align-items: center; gap: var(--space-4) var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle); }
+.stats { display: grid; grid-template-columns: repeat(3, max-content); gap: var(--space-4) var(--space-8); margin: 0px; }
+.stat { display: grid; min-width: 0px; align-content: start; gap: 4px; }
+.stat dt { color: var(--text-muted); font-size: var(--text-xs); line-height: 1.3; white-space: nowrap; }
+.stat dd { margin: 0px; line-height: 1.3; }
+.stat dd > span { font-family: var(--font-body); font-size: var(--text-lg); letter-spacing: var(--tracking-body); line-height: 1.3; }
+.light { color: var(--foreground); font-size: var(--text-lg); white-space: nowrap; }
+.save { display: inline-flex; min-width: 8rem; height: var(--control-height-sm); align-items: center; justify-content: center; gap: 6px; padding: 0px 16px; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--foreground); font: inherit; font-size: var(--text-sm); font-weight: 500; cursor: pointer; transition: background-color var(--duration-fast) var(--ease-standard),color var(--duration-fast) var(--ease-standard),border-color var(--duration-fast) var(--ease-standard),transform var(--duration-fast) var(--ease-standard); }
+.save:active { transform: scale(0.97); }
+.save[aria-pressed="true"] { border-color: transparent; background: var(--foreground); color: var(--background); }
+@media (hover: hover) and (pointer: fine) { .save[aria-pressed="false"]:hover { background: var(--surface-muted); } }
+@container (max-width: 520px) { .details { grid-template-columns: minmax(0px, 1fr); gap: var(--space-4); padding-inline: var(--space-1); } }
+@container (max-width: 520px) { .stats { grid-template-columns: repeat(3, minmax(0px, 1fr)); gap: var(--space-3); } }
+@container (max-width: 520px) { .light, .stat dd > span { font-size: var(--text-base); } }
+@container (max-width: 520px) { .light { white-space: normal; text-wrap-style: balance; } }
+@container (max-width: 520px) { .save { width: 100%; height: var(--control-height-md); } }
+@media (prefers-reduced-motion: reduce) { .save { transition: none; } }
