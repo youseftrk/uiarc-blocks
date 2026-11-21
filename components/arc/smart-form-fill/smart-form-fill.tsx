@@ -99,6 +99,7 @@ export function SmartFormFill({
   extract,
   reviewThreshold = 0.8,
   samples = DEFAULT_SAMPLES,
+  autoPlay = false,
   onFill,
   onUndo,
   onSubmit,
@@ -116,6 +117,7 @@ export function SmartFormFill({
   const [saved, setSaved] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  const autoPlayedRef = useRef(false);
 
   const updateValues = useCallback(
     (next: Record<string, string>) => {
@@ -196,6 +198,17 @@ export function SmartFormFill({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [extracting, stopExtract]);
+
+  useEffect(() => {
+    if (!autoPlay || autoPlayedRef.current || samples.length === 0) return;
+    autoPlayedRef.current = true;
+    const sample = samples[0];
+    const t = window.setTimeout(() => {
+      setPastedText(sample.text);
+      void runExtract(sample.text);
+    }, 350);
+    return () => window.clearTimeout(t);
+  }, [autoPlay, samples, runExtract]);
 
   const handleUndo = () => {
     if (!undoSnapshot) return;
