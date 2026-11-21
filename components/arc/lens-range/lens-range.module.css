@@ -1,0 +1,43 @@
+.root { --lr-accent: var(--control-on); --lr-fill: var(--control-fill); --lr-tick: var(--border-strong); --lr-bubble: var(--foreground); --lr-bubble-text: var(--background); --lr-inset: 14px; position: relative; display: grid; width: 100%; min-width: 0px; gap: var(--space-2); color: var(--foreground); font-family: var(--font-body); font-size: var(--text-sm); line-height: var(--leading-body); letter-spacing: var(--tracking-body); user-select: none; }
+.label { padding-inline: calc(var(--lr-inset) - 10px); font-weight: 500; }
+.bubbles { position: relative; height: 36px; pointer-events: none; }
+.bridge, .cap, .mid, .pointer, .text { position: absolute; top: 0px; left: 0px; will-change: transform; }
+.cap { width: 28px; height: 28px; border-radius: 50%; background: var(--lr-bubble); }
+.bridge, .mid { width: 100px; height: 28px; background: var(--lr-bubble); transform-origin: 0px 50%; }
+.bridge { opacity: 0; }
+.pointer { top: 27px; width: 10px; height: 6px; background: var(--lr-bubble); clip-path: polygon(0px 0px, 100% 0px, 50% 100%); }
+.text { height: 28px; color: var(--lr-bubble-text); font-size: var(--text-sm); font-weight: 500; line-height: 28px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.scale { position: relative; height: 68px; margin-top: -2px; cursor: pointer; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.ticks { position: absolute; top: 0px; right: var(--lr-inset); left: var(--lr-inset); height: 40px; pointer-events: none; }
+.tick { position: absolute; bottom: 0px; left: 0px; width: 2px; height: 10px; margin-left: -1px; border-radius: 1px; background: var(--lr-tick); transform-origin: 50% 100%; will-change: transform; }
+.tickOn { position: absolute; inset: 0px; border-radius: inherit; background: var(--lr-accent); opacity: 0; }
+.track { position: absolute; top: 53px; right: var(--lr-inset); left: var(--lr-inset); height: 2px; border-radius: var(--radius-pill); background: var(--control-track); }
+.fill { position: absolute; inset: 0px; border-radius: inherit; background: var(--lr-fill); transform-origin: 0px 50%; transform: scaleX(0); }
+.stop { position: absolute; top: 50%; width: 4px; height: 4px; margin: -2px 0px 0px -2px; border-radius: 50%; background: var(--text-muted); }
+.knobs { position: absolute; inset: 0 var(--lr-inset); pointer-events: none; }
+.knob { position: absolute; top: 43px; left: 0px; width: 22px; height: 22px; margin-left: -11px; border-radius: 50%; pointer-events: auto; cursor: grab; outline: none; will-change: transform; }
+.knob::after { content: ""; position: absolute; inset: -11px; border-radius: inherit; }
+.knobFace { position: absolute; inset: 0px; border-radius: inherit; background: var(--control-thumb); box-shadow: var(--control-thumb-shadow); }
+.presets { position: relative; height: 22px; margin-inline: var(--lr-inset); }
+.preset { position: absolute; top: 0px; left: 0px; display: inline-flex; height: 22px; align-items: center; padding: 0px 4px; border: 0px; border-radius: var(--radius-pill); background: none; color: var(--text-muted); font: inherit; font-size: var(--text-xs); white-space: nowrap; cursor: pointer; transition: color var(--duration-fast) var(--ease-standard); }
+.presetDot { position: absolute; top: 50%; left: -4px; width: 4px; height: 4px; margin-top: -2px; border-radius: 50%; background: var(--lr-accent); opacity: 0; transition: opacity var(--duration-fast) var(--ease-standard); }
+@media (hover: hover) and (pointer: fine) { .preset:hover { color: var(--foreground); } }
+.root[data-dragging], .root[data-dragging] .knob, .root[data-dragging] .scale { cursor: grabbing; }
+.root[data-disabled] { opacity: 0.5; }
+.root[data-disabled] .knob, .root[data-disabled] .preset, .root[data-disabled] .scale { cursor: not-allowed; }
+@media (prefers-reduced-motion: reduce) { .presetDot, .preset { transition: none; } }
+.demo { display: grid; width: min(100%, 480px); margin-inline: auto; font-family: var(--font-body); letter-spacing: var(--tracking-body); }
+.card { display: grid; gap: var(--space-5); padding: var(--space-6) var(--space-5) var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface); }
+.head { display: flex; min-width: 0px; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--space-3); padding-inline: var(--space-1); }
+.role { display: grid; min-width: 0px; }
+.title { margin: 0px; font-size: var(--text-lg); font-weight: 500; line-height: var(--leading-body); }
+.meta { color: var(--text-muted); font-size: var(--text-sm); }
+.periods { display: inline-flex; flex: 0 0 auto; padding: 3px; border-radius: var(--radius-pill); background: var(--surface-muted); }
+.period { position: relative; display: inline-grid; height: 30px; place-items: center; padding: 0 var(--space-3); border: 0px; border-radius: var(--radius-pill); background: transparent; color: var(--text-secondary); font: inherit; font-size: var(--text-sm); cursor: pointer; transition: color var(--duration-fast) var(--ease-standard); }
+.period[aria-pressed="true"] { color: var(--foreground); }
+@media (hover: hover) and (pointer: fine) { .period:hover { color: var(--foreground); } }
+.periodActive { position: absolute; inset: 0px; border-radius: inherit; background: var(--surface-raised); box-shadow: var(--shadow-resting),0 0 0 1px var(--border); }
+.periodText { position: relative; }
+.note { margin: 0px; padding: var(--space-3) var(--space-1) 0; border-top: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: var(--text-sm); }
+.figure { color: var(--foreground); font-weight: 500; font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { .period { transition: none; } }
