@@ -1,7 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
-import { useReducedMotion } from "../use-reduced-motion";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+  type KeyboardEvent as ReactKeyboardEvent,
+  type PointerEvent as ReactPointerEvent,
+  type RefObject,
+} from "react";
 import styles from "./lens-range.module.css";
 
 export interface LensRangePreset {
@@ -31,597 +40,731 @@ export interface LensRangeProps {
   style?: CSSProperties;
 }
 
-interface Spring {
-  x: number;
-  v: number;
+interface Spring { x: number; v: number }
+interface Config {
+  min: number; max: number; step: number; gap: number; large: number; decimals: number;
+  values: [number, number]; reduced: boolean; disabled: boolean; presets: LensRangePreset[]; magnet: number;
+  emit: (index: number, value: number) => void; commit: () => void;
 }
-
-interface Engine {
-  width: number;
-  target: [number, number];
-  pos: [Spring, Spring];
-  glide: [boolean, boolean];
-  level: [Spring, Spring];
-  levelTarget: [number, number];
-  follow: [Spring, Spring];
-  pill: [Spring, Spring];
-  merge: Spring;
-  merged: boolean;
-  textWidth: [number, number, number];
-  pulse: Spring[];
-  presetX: number[];
-  frame: number;
-  last: number;
-  visible: boolean;
-  ready: boolean;
+interface Nodes {
+  root: RefObject<HTMLDivElement | null>;
+  scale: RefObject<HTMLDivElement | null>;
+  ticks: RefObject<(HTMLSpanElement | null)[]>;
+  fill: RefObject<HTMLSpanElement | null>;
+  knobs: RefObject<(HTMLDivElement | null)[]>;
+  marks: RefObject<(HTMLButtonElement | null)[]>;
+  pills: RefObject<(HTMLSpanElement | null)[]>;
+  texts: RefObject<(HTMLSpanElement | null)[]>;
+  pointers: RefObject<(HTMLSpanElement | null)[]>;
 }
+interface Drag { id: number; index: number | null; grab: number; x0: number; touch: boolean }
 
-const INSET = 14;
-const TICK_GAP = 7;
-const SUBSTEP = 1 / 240;
-const GLIDE = { k: 784, c: 56 };
-const TRAIL = { k: 520, c: 32 };
-const PULSE = { k: 900, c: 22 };
-/** Lens strength at rest, on hover or focus, and while dragging: [spread, swell]. */
-const LENS = [[0.395, 1.15], [0.695, 1.73], [0.9, 2.115]] as const;
-const SPREAD_SIGMA = 21.25;
-const SWELL_SIGMA = 15.5;
-const EMPTY_PRESETS: readonly LensRangePreset[] = [];
-const defaultFormat = (value: number) => String(value);
-
+const STEP = 1 / 240;
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
+const decimalsOf = (value: number) => (String(value).split(".")[1] ?? "").length;
+const smooth = (value: number) => {
+  const t = clamp(value, 0, 1);
+  return t * t * (3 - 2 * t);
+};
 const spring = (x = 0): Spring => ({ x, v: 0 });
-const fixed = (value: number, digits = 2) => String(Math.round(value * 10 ** digits) / 10 ** digits);
-const at = (x: number) => `translate3d(${fixed(x)}px, 0px, 0px)`;
+const advance = (s: Spring, target: number, stiffness: number, damping: number, dt: number) => {
+  s.v += (-stiffness * (s.x - target) - damping * s.v) * dt;
+  s.x += s.v * dt;
+};
+const settled = (s: Spring, target: number, epsilon: number) => Math.abs(s.x - target) < epsilon && Math.abs(s.v) < 20 * epsilon;
 
-function advance(body: Spring, target: number, k: number, c: number, dt: number) {
-  body.v += (-k * (body.x - target) - c * body.v) * dt;
-  body.x += body.v * dt;
-}
+const REDUCED = "(prefers-reduced-motion: reduce)";
+const subscribeReduced = (listener: () => void) => {
+  const query = window.matchMedia(REDUCED);
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+};
 
-function settled(body: Spring, target: number, epsilon = 0.01) {
-  if (Math.abs(body.x - target) < epsilon && Math.abs(body.v) < epsilon * 10) {
-    body.x = target;
-    body.v = 0;
-    return true;
+/* Styles are written straight to the nodes, and only when a value changes. */
+const written = new WeakMap<Element, Record<string, string>>();
+function write(node: Element | null | undefined, property: string, value: string) {
+  if (!node) return;
+  let cache = written.get(node);
+  if (!cache) {
+    cache = {};
+    written.set(node, cache);
   }
-  return false;
+  if (cache[property] !== value) {
+    cache[property] = value;
+    (node as HTMLElement).style.setProperty(property, value);
+  }
 }
 
-function write(node: HTMLElement | null | undefined, property: "transform" | "opacity", value: string) {
-  if (node && node.style[property] !== value) node.style[property] = value;
-}
+function createEngine(config: RefObject<Config | null>, nodes: Nodes, setDragging: (index: number | null) => void) {
+  const cfg = () => config.current as Config;
+  const thumb = () => ({ pos: spring(), goal: 0, lag: spring(), lens: spring(0.3), press: spring(), bubble: spring(), hover: false, focus: false, caught: -1 });
+  const state = {
+    w: 1, left: 0, rootW: 1, rootLeft: 0,
+    thumbs: [thumb(), thumb()],
+    widths: [spring(), spring(), spring()],
+    textW: [0, 0, 0],
+    merge: spring(),
+    merged: false,
+    pulses: [] as Spring[],
+    labels: [] as number[],
+    drag: null as Drag | null,
+    running: false, frame: 0, last: 0, visible: true, disposed: false, measured: false,
+  };
 
-function createEngine(): Engine {
+  const toX = (value: number) => ((value - cfg().min) / (cfg().max - cfg().min || 1)) * state.w;
+  const toValue = (x: number) => cfg().min + (x / state.w) * (cfg().max - cfg().min);
+  const round = (value: number) => Number(value.toFixed(cfg().decimals));
+  const lowest = (index: number) => (index === 1 ? round(cfg().values[0] + cfg().gap) : cfg().min);
+  const highest = (index: number) => (index === 0 ? round(cfg().values[1] - cfg().gap) : cfg().max);
+  const snap = (index: number, value: number) => {
+    const c = cfg();
+    const inside = clamp(value, c.min, c.max);
+    return clamp(round(c.min + Math.round((inside - c.min) / c.step) * c.step), lowest(index), highest(index));
+  };
+  const lensGoal = (index: number) => {
+    const t = state.thumbs[index];
+    return state.drag?.index === index ? 1 : t.hover || t.focus ? 0.72 : 0.3;
+  };
+  const at = (index: number) => state.thumbs[index].pos.x + state.thumbs[index].lag.x;
+
+  function kick() {
+    if (state.disposed || state.running) return;
+    if (!state.visible) {
+      rest();
+      paint();
+      return;
+    }
+    state.running = true;
+    state.last = 0;
+    state.frame = requestAnimationFrame(tick);
+  }
+
+  function simulate(elapsed: number) {
+    if (cfg().reduced) {
+      rest();
+      updateMerged();
+      rest();
+      return !!state.drag;
+    }
+    const steps = Math.min(24, Math.max(1, Math.ceil(elapsed / STEP - 1e-6)));
+    const dt = elapsed / steps;
+    for (let i = 0; i < steps; i++) {
+      state.thumbs.forEach((t, index) => {
+        if (state.drag?.index !== index) advance(t.pos, t.goal, 520, 38, dt);
+        advance(t.lag, 0, 520, 40, dt);
+        advance(t.lens, lensGoal(index), 300, 26, dt);
+        advance(t.press, +(state.drag?.index === index), 700, 38, dt);
+        advance(t.bubble, t.pos.x + t.lag.x, 380, 26, dt);
+      });
+      state.widths.forEach((w, index) => advance(w, state.textW[index], 640, 46, dt));
+      advance(state.merge, +!!state.merged, 360, 30, dt);
+      state.pulses.forEach(p => advance(p, 0, 520, 16, dt));
+    }
+    updateMerged();
+    let moving = !!state.drag;
+    state.thumbs.forEach((t, index) => {
+      if (!((state.drag?.index === index || settled(t.pos, t.goal, 0.05)) && settled(t.lag, 0, 0.05) && settled(t.lens, lensGoal(index), 0.002) && settled(t.press, +(state.drag?.index === index), 0.002) && settled(t.bubble, at(index), 0.05))) moving = true;
+    });
+    state.widths.forEach((w, index) => {
+      if (!settled(w, state.textW[index], 0.05)) moving = true;
+    });
+    if (!settled(state.merge, +!!state.merged, 0.002)) moving = true;
+    state.pulses.forEach(p => {
+      if (!settled(p, 0, 0.002)) moving = true;
+    });
+    if (!moving) rest();
+    return moving;
+  }
+
+  function tick(now: number) {
+    const elapsed = state.last ? Math.min(0.05, (now - state.last) / 1000) : 1 / 60;
+    state.last = now;
+    const moving = simulate(elapsed);
+    paint();
+    if (moving && state.visible && !state.disposed) state.frame = requestAnimationFrame(tick);
+    else {
+      state.running = false;
+      state.last = 0;
+    }
+  }
+
+  function rest() {
+    state.thumbs.forEach((t, index) => {
+      if (state.drag?.index !== index) {
+        t.pos.x = t.goal;
+        t.pos.v = 0;
+      }
+      t.lag.x = 0; t.lag.v = 0;
+      t.lens.x = lensGoal(index); t.lens.v = 0;
+      t.press.x = +(state.drag?.index === index); t.press.v = 0;
+      t.bubble.x = at(index); t.bubble.v = 0;
+    });
+    state.widths.forEach((w, index) => {
+      w.x = state.textW[index];
+      w.v = 0;
+    });
+    state.merge.x = +!!state.merged;
+    state.merge.v = 0;
+    state.pulses.forEach(p => {
+      p.x = 0;
+      p.v = 0;
+    });
+  }
+
+  function bubbles() {
+    const wa = Math.max(state.widths[0].x, 28);
+    const wb = Math.max(state.widths[1].x, 28);
+    const ca = clamp(14 + state.thumbs[0].bubble.x, wa / 2, state.rootW - wa / 2);
+    const cb = clamp(14 + state.thumbs[1].bubble.x, wb / 2, state.rootW - wb / 2);
+    return { wa, wb, ca, cb };
+  }
+
+  function updateMerged() {
+    const { wa, wb, ca, cb } = bubbles();
+    const gap = cb - wb / 2 - (ca + wa / 2);
+    if (!state.merged && gap < 4) state.merged = true;
+    else if (state.merged && gap > 14) state.merged = false;
+  }
+
+  function paint() {
+    if (!state.measured) return;
+    const c = cfg();
+    const a = at(0);
+    const b = at(1);
+    const low = Math.min(a, b);
+    const high = Math.max(a, b);
+    const ticks = nodes.ticks.current;
+    const count = ticks.length;
+    const pull = state.thumbs.map(t => 0.18 + 0.72 * t.lens.x);
+    const grow = state.thumbs.map(t => 0.35 + 0.65 * t.lens.x);
+    for (let i = 0; i < count; i++) {
+      const node = ticks[i];
+      if (!node) continue;
+      const home = count > 1 ? (i / (count - 1)) * state.w : 0;
+      let x = home;
+      let lift = 0;
+      for (let k = 0; k < 2; k++) {
+        const distance = home - (k ? b : a);
+        const falloff = Math.exp(-(distance * distance) / 900);
+        x += pull[k] * distance * falloff;
+        lift = Math.max(lift, grow[k] * Math.exp(-(distance * distance) / (900 * 0.55)));
+      }
+      write(node, "transform", `translate3d(${x.toFixed(2)}px,0,0) scaleY(${(1 + 2.1 * lift).toFixed(4)})`);
+      const inside = smooth((home - low + 2) / 4) * smooth((high - home + 2) / 4);
+      write(node.firstElementChild, "opacity", inside.toFixed(3));
+    }
+    write(nodes.fill.current, "transform", `translate3d(${low.toFixed(2)}px,0,0) scaleX(${(Math.max(0, high - low) / state.w).toFixed(5)})`);
+    state.thumbs.forEach((t, index) => {
+      write(nodes.knobs.current[index], "transform", `translate3d(${at(index).toFixed(2)}px,0,0)`);
+      write(nodes.knobs.current[index]?.firstElementChild, "transform", `scale(${(1 + 0.1 * t.press.x).toFixed(4)})`);
+    });
+    const marks = nodes.marks.current;
+    c.presets.forEach((preset, index) => {
+      const pulse = state.pulses[index]?.x ?? 0;
+      const caught = state.thumbs.some(t => t.caught === index);
+      write(marks[index], "transform", `translate3d(${(state.labels[index] ?? toX(preset.value)).toFixed(2)}px,0,0) translateX(-50%) scale(${(1 + 0.12 * pulse).toFixed(4)})`);
+      write(marks[index]?.firstElementChild, "opacity", caught ? "1" : "0");
+    });
+    const { wa, wb, ca, cb } = bubbles();
+    const merge = clamp(state.merge.x, 0, 1.2);
+    const wide = Math.max(state.widths[2].x, 28);
+    const centre = clamp((ca + cb) / 2, wide / 2, state.rootW - wide / 2);
+    const aLeft = ca - wa / 2 + (centre - wide / 2 - (ca - wa / 2)) * merge;
+    const aRight = ca + wa / 2 + (centre - (ca + wa / 2)) * merge;
+    const bLeft = cb - wb / 2 + (centre - (cb - wb / 2)) * merge;
+    const bRight = cb + wb / 2 + (centre + wide / 2 - (cb + wb / 2)) * merge;
+    const pills = nodes.pills.current;
+    const pill = (first: number, left: number, right: number) => {
+      const end = Math.max(right, left + 28);
+      write(pills[first], "transform", `translate3d(${left.toFixed(2)}px,0,0)`);
+      write(pills[first + 1], "transform", `translate3d(${(left + 14).toFixed(2)}px,0,0) scaleX(${(Math.max(0, end - left - 28) / 100).toFixed(5)})`);
+      write(pills[first + 2], "transform", `translate3d(${(end - 28).toFixed(2)}px,0,0)`);
+    };
+    pill(0, aLeft, aRight);
+    pill(3, bLeft, bRight);
+    const aMid = (aLeft + aRight) / 2;
+    const bMid = (bLeft + bRight) / 2;
+    write(pills[6], "transform", `translate3d(${aMid.toFixed(2)}px,0,0) scale(${(Math.max(0, bMid - aMid) / 100).toFixed(5)},${clamp(merge, 0, 1).toFixed(4)})`);
+    write(pills[6], "opacity", merge > 0.02 ? "1" : "0");
+    const texts = nodes.texts.current;
+    const fits = (index: number) => smooth((16 - (state.textW[index] - state.widths[index].x)) / 8);
+    const apart = smooth((cb - wb / 2 - (ca + wa / 2) - 2) / 12);
+    const single = smooth((0.45 - merge) / 0.45) * apart;
+    const joined = smooth((merge - 0.55) / 0.45);
+    write(texts[0], "transform", `translate3d(${((aLeft + aRight) / 2).toFixed(2)}px,0,0) translateX(-50%)`);
+    write(texts[1], "transform", `translate3d(${((bLeft + bRight) / 2).toFixed(2)}px,0,0) translateX(-50%)`);
+    write(texts[2], "transform", `translate3d(${centre.toFixed(2)}px,0,0) translateX(-50%) scale(${(0.94 + 0.06 * joined).toFixed(4)})`);
+    write(texts[0], "opacity", (single * fits(0)).toFixed(3));
+    write(texts[1], "opacity", (single * fits(1)).toFixed(3));
+    write(texts[2], "opacity", (joined * fits(2)).toFixed(3));
+    state.thumbs.forEach((_, index) => {
+      const x = clamp(14 + at(index), (index ? bLeft : aLeft) + 14 - 2, (index ? bRight : aRight) - 14 + 2);
+      write(nodes.pointers.current[index], "transform", `translate3d(${x.toFixed(2)}px,0,0) translateX(-50%)`);
+    });
+  }
+
+  function measureTexts(force = false) {
+    const texts = nodes.texts.current;
+    for (let i = 0; i < 3; i++) {
+      const width = (texts[i]?.offsetWidth ?? 0) + 22;
+      state.textW[i] = width;
+      if (force || !state.widths[i].x) {
+        state.widths[i].x = width;
+        state.widths[i].v = 0;
+      }
+    }
+  }
+
+  function measure() {
+    const scale = nodes.scale.current;
+    const root = nodes.root.current;
+    if (!scale || !root) return;
+    const scaleRect = scale.getBoundingClientRect();
+    const rootRect = root.getBoundingClientRect();
+    state.w = Math.max(1, scaleRect.width - 28);
+    state.left = scaleRect.left + 14;
+    state.rootW = rootRect.width;
+    state.rootLeft = rootRect.left;
+    const first = !state.measured;
+    state.measured = true;
+    const c = cfg();
+    state.thumbs.forEach((t, index) => {
+      t.goal = toX(c.values[index]);
+      if (first || state.drag?.index !== index) {
+        t.pos.x = t.goal;
+        t.pos.v = 0;
+        t.bubble.x = t.goal;
+      }
+    });
+    state.pulses = c.presets.map((_, index) => state.pulses[index] ?? spring());
+    const spots = c.presets.map((preset, index) => ({ i: index, at: toX(preset.value), w: (nodes.marks.current[index]?.offsetWidth ?? 0) + 6 })).sort((p, q) => p.at - q.at);
+    const places = spots.map(spot => spot.at);
+    for (let pass = 0; pass < 12; pass++) {
+      for (let i = 1; i < spots.length; i++) {
+        const overlap = places[i - 1] + spots[i - 1].w / 2 - (places[i] - spots[i].w / 2);
+        if (overlap > 0) {
+          places[i - 1] -= overlap / 2;
+          places[i] += overlap / 2;
+        }
+      }
+      spots.forEach((spot, i) => {
+        places[i] = clamp(places[i], spot.w / 2 - 14, state.w + 14 - spot.w / 2);
+      });
+    }
+    state.labels = [];
+    spots.forEach((spot, i) => {
+      state.labels[spot.i] = places[i];
+    });
+    measureTexts(first);
+    updateMerged();
+    if (first) state.merge.x = +!!state.merged;
+    paint();
+  }
+
+  function pulse(index: number) {
+    const p = state.pulses[index];
+    if (p && !cfg().reduced) {
+      p.v += 9;
+      kick();
+    }
+  }
+  const focusKnob = (index: number) => nodes.knobs.current[index]?.focus({ preventScroll: true });
+
+  function grab(index: number, x: number, onKnob: boolean) {
+    const drag = state.drag;
+    if (!drag) return;
+    const t = state.thumbs[index];
+    const shown = at(index);
+    drag.index = index;
+    drag.grab = onKnob ? x - t.pos.x : 0;
+    if (!onKnob) {
+      t.pos.x = x;
+      t.lag.x = cfg().reduced ? 0 : shown - x;
+    }
+    t.pos.v = 0;
+    setDragging(index);
+    focusKnob(index);
+    dragTo(x);
+  }
+
+  function dragTo(pointer: number) {
+    const drag = state.drag;
+    if (!drag || drag.index === null) return;
+    const c = cfg();
+    const index = drag.index;
+    const t = state.thumbs[index];
+    const from = toX(lowest(index));
+    const to = toX(highest(index));
+    const raw = clamp(pointer - drag.grab, from, to);
+    let x = raw;
+    let value = snap(index, toValue(raw));
+    let caught = -1;
+    if (c.magnet > 0) {
+      let nearest = -1;
+      let best = Infinity;
+      c.presets.forEach((preset, i) => {
+        if (preset.value < lowest(index) || preset.value > highest(index)) return;
+        const distance = Math.abs(raw - toX(preset.value));
+        if (distance < c.magnet && distance < best) {
+          nearest = i;
+          best = distance;
+        }
+      });
+      if (nearest >= 0) {
+        const anchor = toX(c.presets[nearest].value);
+        const offset = raw - anchor;
+        x = anchor + Math.sign(offset) * c.magnet * Math.pow(Math.abs(offset) / c.magnet, 2.4);
+        if (Math.abs(offset) < 0.55 * c.magnet) {
+          value = c.presets[nearest].value;
+          caught = nearest;
+        } else value = snap(index, toValue(x));
+      }
+    }
+    t.pos.x = x;
+    t.goal = x;
+    if (caught !== t.caught) {
+      if (caught >= 0) {
+        pulse(caught);
+        if (drag.touch && !c.reduced) navigator.vibrate?.(6);
+      }
+      t.caught = caught;
+    }
+    c.emit(index, value);
+  }
+
+  function hover(clientX: number | null) {
+    let changed = false;
+    state.thumbs.forEach((t, index) => {
+      const near = clientX !== null && Math.abs(clientX - state.left - at(index)) < 36;
+      if (near !== t.hover) {
+        t.hover = near;
+        changed = true;
+      }
+    });
+    if (changed) kick();
+  }
+
   return {
-    width: 0, target: [0, 0], pos: [spring(), spring()], glide: [false, false], level: [spring(), spring()], levelTarget: [0, 0],
-    follow: [spring(), spring()], pill: [spring(52), spring(52)], merge: spring(), merged: false, textWidth: [28, 28, 60], pulse: [], presetX: [],
-    frame: 0, last: 0, visible: true, ready: false,
+    measure,
+    sync() {
+      const c = cfg();
+      state.thumbs.forEach((t, index) => {
+        if (state.drag?.index !== index) t.goal = toX(c.values[index]);
+      });
+      state.pulses = c.presets.map((_, index) => state.pulses[index] ?? spring());
+      measureTexts();
+      kick();
+    },
+    kick,
+    down(event: ReactPointerEvent<HTMLDivElement>) {
+      const c = cfg();
+      if (c.disabled || event.button !== 0 || !event.isPrimary || state.drag) return;
+      measure();
+      const x = event.clientX - state.left;
+      const knob = (event.target as HTMLElement).closest<HTMLElement>("[data-index]");
+      try {
+        event.currentTarget.setPointerCapture(event.pointerId);
+      } catch { /* The pointer may already be gone. */ }
+      state.drag = { id: event.pointerId, index: null, grab: 0, x0: event.clientX, touch: event.pointerType === "touch" };
+      if (c.values[1] - c.values[0] <= c.gap + 1e-9 && Math.abs(x - toX(c.values[0])) < 16) {
+        focusKnob(knob ? Number(knob.dataset.index) : 1);
+        event.preventDefault();
+        return;
+      }
+      grab(knob ? Number(knob.dataset.index) : Math.abs(x - toX(c.values[0])) <= Math.abs(x - toX(c.values[1])) ? 0 : 1, x, !!knob);
+      event.preventDefault();
+      kick();
+    },
+    move(event: ReactPointerEvent<HTMLDivElement>) {
+      const drag = state.drag;
+      if (!drag) return void hover(event.clientX);
+      if (drag.id !== event.pointerId) return;
+      const x = event.clientX - state.left;
+      if (drag.index === null) {
+        const travelled = event.clientX - drag.x0;
+        if (Math.abs(travelled) < 2) return;
+        grab(travelled < 0 ? 0 : 1, x - travelled, true);
+      }
+      dragTo(x);
+      kick();
+    },
+    up(event: ReactPointerEvent<HTMLDivElement>) {
+      const drag = state.drag;
+      if (!drag || drag.id !== event.pointerId) return;
+      state.drag = null;
+      setDragging(null);
+      const index = drag.index;
+      if (index === null) return;
+      const t = state.thumbs[index];
+      t.goal = toX(cfg().values[index]);
+      t.caught = -1;
+      cfg().commit();
+      kick();
+    },
+    hover,
+    focus(index: number, focused: boolean) {
+      state.thumbs[index].focus = focused;
+      kick();
+    },
+    key(index: number, event: ReactKeyboardEvent<HTMLDivElement>) {
+      const c = cfg();
+      if (c.disabled) return;
+      const current = c.values[index];
+      const step = event.shiftKey ? c.large : c.step;
+      let next: number;
+      if (event.key === "ArrowRight" || event.key === "ArrowUp") next = current + step;
+      else if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = current - step;
+      else if (event.key === "PageUp") next = current + c.large;
+      else if (event.key === "PageDown") next = current - c.large;
+      else if (event.key === "Home") next = lowest(index);
+      else if (event.key === "End") next = highest(index);
+      else return;
+      event.preventDefault();
+      const value = snap(index, next);
+      if (value === current) {
+        if (!c.reduced) {
+          state.thumbs[index].pos.v += 180 * Math.sign(next - current);
+          kick();
+        }
+        return;
+      }
+      const preset = c.presets.findIndex(p => p.value === value);
+      if (preset >= 0) pulse(preset);
+      c.emit(index, value);
+      c.commit();
+    },
+    choose(presetIndex: number) {
+      const c = cfg();
+      const preset = c.presets[presetIndex];
+      if (!preset || c.disabled) return;
+      const toLow = Math.abs(c.values[0] - preset.value);
+      const toHigh = Math.abs(c.values[1] - preset.value);
+      let index = toLow < toHigh ? 0 : toHigh < toLow ? 1 : preset.value < c.values[0] ? 0 : 1;
+      if (preset.value < lowest(index) || preset.value > highest(index)) index = 1 - index;
+      if (preset.value < lowest(index) || preset.value > highest(index)) return;
+      pulse(presetIndex);
+      c.emit(index, preset.value);
+      c.commit();
+    },
+    setVisible(visible: boolean) {
+      if (visible === state.visible) return;
+      state.visible = visible;
+      if (!visible) {
+        cancelAnimationFrame(state.frame);
+        state.running = false;
+        state.last = 0;
+        rest();
+        paint();
+        return;
+      }
+      kick();
+    },
+    dispose() {
+      state.disposed = true;
+      cancelAnimationFrame(state.frame);
+    },
   };
 }
 
+type Engine = ReturnType<typeof createEngine>;
+
 export function LensRange({
-  label = "Range", value: valueProp, defaultValue, onValueChange, onValueCommit, min = 0, max = 100, step = 1, largeStep, minStepsBetweenThumbs = 0,
-  presets = EMPTY_PRESETS, magnet = 16, format = defaultFormat, thumbLabels, accent, name, disabled = false, className, style,
+  label = "Range",
+  value,
+  defaultValue,
+  onValueChange,
+  onValueCommit,
+  min = 0,
+  max = 100,
+  step = 1,
+  largeStep,
+  minStepsBetweenThumbs = 0,
+  presets = [],
+  magnet = 16,
+  format,
+  thumbLabels,
+  accent,
+  name,
+  disabled = false,
+  className,
+  style,
 }: LensRangeProps) {
-  const reduced = useReducedMotion();
-  const span = Math.max(max - min, Number.EPSILON);
-  const snap = useCallback((raw: number) => {
-    const stepped = min + Math.round((raw - min) / step) * step;
-    return clamp(Number(stepped.toFixed(10)), min, max);
-  }, [max, min, step]);
-  const [inner, setInner] = useState<[number, number]>(() => defaultValue ?? [snap(min + span / 4), snap(max - span / 4)]);
-  const value = valueProp ?? inner;
-  const [low, high] = value;
-  const gap = minStepsBetweenThumbs * step;
-  const [tickCount, setTickCount] = useState(0);
+  const reduced = useSyncExternalStore(subscribeReduced, () => window.matchMedia(REDUCED).matches, () => false);
+  const stepSize = step > 0 ? step : 1;
+  const decimals = Math.max(decimalsOf(stepSize), decimalsOf(min));
+  const span = max - min || 1;
+  const large = largeStep ?? Math.max(stepSize, Math.round(span / 10 / stepSize) * stepSize);
+  const gap = Math.max(0, minStepsBetweenThumbs) * stepSize;
+  const order = (pair: readonly [number, number]): [number, number] => [clamp(Math.min(pair[0], pair[1]), min, max), clamp(Math.max(pair[0], pair[1]), min, max)];
+  const [inner, setInner] = useState<[number, number]>(() => order(defaultValue ?? [min + Math.round(span / 4 / stepSize) * stepSize, max - Math.round(span / 4 / stepSize) * stepSize]));
+  const values = value ? order(value) : inner;
   const [dragging, setDragging] = useState<number | null>(null);
+  const [tickCount, setTickCount] = useState(41);
+  const text = format ?? ((amount: number) => amount.toLocaleString("en-US", { minimumFractionDigits: decimals, maximumFractionDigits: decimals }));
+  const marks = presets.filter(preset => preset.value >= min && preset.value <= max);
+
+  const valuesRef = useRef(values);
+  const configRef = useRef<Config | null>(null);
+  const commitRef = useRef(onValueCommit);
+  const changeRef = useRef(onValueChange);
+  const controlledRef = useRef(value !== undefined);
+  const [emit] = useState(() => (index: number, next: number) => {
+    const current = valuesRef.current;
+    if (current[index] === next) return;
+    const pair: [number, number] = index === 0 ? [next, current[1]] : [current[0], next];
+    valuesRef.current = pair;
+    if (configRef.current) configRef.current.values = pair;
+    if (!controlledRef.current) setInner(pair);
+    changeRef.current?.(pair);
+  });
+  const [commit] = useState(() => () => commitRef.current?.(valuesRef.current));
 
   const rootRef = useRef<HTMLDivElement>(null);
   const scaleRef = useRef<HTMLDivElement>(null);
-  const engineRef = useRef<Engine>(null as unknown as Engine);
-  if (engineRef.current === null) engineRef.current = createEngine();
-  const live = useRef({ value, dragging: null as number | null, grab: 0, held: -1, reduced, disabled });
-  const callbacks = useRef({ onValueChange, onValueCommit });
-  const tickRef = useRef<() => void>(() => {});
+  const tickRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const fillRef = useRef<HTMLSpanElement>(null);
+  const knobRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const markRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const pillRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const textRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const pointerRefs = useRef<(HTMLSpanElement | null)[]>([]);
+  const engineRef = useRef<Engine | null>(null);
 
-  useEffect(() => {
-    callbacks.current = { onValueChange, onValueCommit };
-    live.current.value = value;
-    live.current.reduced = reduced;
-    live.current.disabled = disabled;
+  useLayoutEffect(() => {
+    valuesRef.current = values;
+    commitRef.current = onValueCommit;
+    changeRef.current = onValueChange;
+    controlledRef.current = value !== undefined;
+    configRef.current = { min, max, step: stepSize, gap, large, decimals, values, reduced, disabled, presets: marks, magnet, emit, commit };
+    engineRef.current?.sync();
   });
 
-  const wake = useCallback(() => {
-    if (engineRef.current.frame || !engineRef.current.visible) return;
-    engineRef.current.last = performance.now();
-    engineRef.current.frame = requestAnimationFrame(() => tickRef.current());
-  }, []);
-
-  const toPx = useCallback((amount: number) => ((amount - min) / span) * engineRef.current.width, [min, span]);
-
-  const commit = useCallback((next: [number, number], final: boolean) => {
-    const current = live.current.value;
-    if (next[0] !== current[0] || next[1] !== current[1]) {
-      live.current.value = next;
-      if (valueProp === undefined) setInner(next);
-      callbacks.current.onValueChange?.(next);
-    }
-    if (final) callbacks.current.onValueCommit?.(next);
-  }, [valueProp]);
-
-  // One loop steps every spring and writes transforms and opacity straight to the DOM. It stops at rest, offscreen and in background tabs.
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const query = <T extends HTMLElement>(selector: string) => Array.from(root.querySelectorAll<T>(selector));
-
-    const render = () => {
-      const width = engineRef.current.width;
-      const ticks = query(`.${styles.tick}`);
-      const positions = [engineRef.current.pos[0].x, engineRef.current.pos[1].x];
-      const strength = engineRef.current.level.map((body) => {
-        const amount = clamp(body.x, 0, 2);
-        const from = LENS[Math.min(1, Math.floor(amount))];
-        const to = LENS[Math.min(2, Math.floor(amount) + 1)];
-        const mix = amount - Math.min(1, Math.floor(amount));
-        return [from[0] + (to[0] - from[0]) * mix, from[1] + (to[1] - from[1]) * mix];
-      });
-      ticks.forEach((tick, index) => {
-        const base = ticks.length > 1 ? (index / (ticks.length - 1)) * width : 0;
-        let shift = 0;
-        let swell = 1;
-        for (let thumb = 0; thumb < 2; thumb += 1) {
-          const distance = base - positions[thumb];
-          shift += strength[thumb][0] * distance * Math.exp(-(distance * distance) / (2 * SPREAD_SIGMA * SPREAD_SIGMA));
-          swell += strength[thumb][1] * Math.exp(-(distance * distance) / (2 * SWELL_SIGMA * SWELL_SIGMA));
-        }
-        write(tick, "transform", `${at(base + shift)} scaleY(${fixed(swell, 4)})`);
-        write(tick.firstElementChild as HTMLElement | null, "opacity", base >= positions[0] - 0.01 && base <= positions[1] + 0.01 ? "1" : "0");
-      });
-
-      const knobs = query(`.${styles.knob}`);
-      knobs.forEach((knob, index) => {
-        write(knob, "transform", at(positions[index]));
-        write(knob.firstElementChild as HTMLElement | null, "transform", `scale(${live.current.dragging === index ? 1.1 : 1})`);
-      });
-      write(root.querySelector<HTMLElement>(`.${styles.fill}`), "transform", `${at(positions[0])} scaleX(${fixed(width > 0 ? (positions[1] - positions[0]) / width : 0, 5)})`);
-
-      // Bubbles: two caps and a stretched middle each, a bridge between their centers, and three texts.
-      const total = width + INSET * 2;
-      const blend = clamp(engineRef.current.merge.x, 0, 1);
-      const thumbs = [positions[0] + INSET, positions[1] + INSET];
-      const centers = [engineRef.current.follow[0].x + INSET, engineRef.current.follow[1].x + INSET];
-      const mid = (centers[0] + centers[1]) / 2;
-      const mergedWidth = Math.max(56, engineRef.current.textWidth[2] + 24);
-      const mergedCenter = clamp(mid, mergedWidth / 2, Math.max(mergedWidth / 2, total - mergedWidth / 2));
-      const widths = [Math.max(28, engineRef.current.pill[0].x), Math.max(28, engineRef.current.pill[1].x)];
-      const half = Math.max(28, mergedWidth / 2);
-      const pillCenter = [0, 1].map((index) => {
-        const single = clamp(centers[index], widths[index] / 2, Math.max(widths[index] / 2, total - widths[index] / 2));
-        const joined = index === 0 ? mergedCenter - mergedWidth / 2 + half / 2 : mergedCenter + mergedWidth / 2 - half / 2;
-        return single + (joined - single) * blend;
-      });
-      const bubbles = root.querySelector<HTMLElement>(`.${styles.bubbles}`);
-      const parts = bubbles ? (Array.from(bubbles.children) as HTMLElement[]) : [];
-      [0, 1].forEach((index) => {
-        const left = pillCenter[index] - widths[index] / 2;
-        write(parts[index * 3], "transform", at(left));
-        write(parts[index * 3 + 1], "transform", `${at(left + 14)} scaleX(${fixed((widths[index] - 28) / 100, 5)})`);
-        write(parts[index * 3 + 2], "transform", at(left + widths[index] - 28));
-      });
-      write(parts[6], "transform", `${at(pillCenter[0])} scale(${fixed(Math.max(0, pillCenter[1] - pillCenter[0]) / 100, 5)}, ${fixed(blend, 4)})`);
-      write(parts[6], "opacity", blend > 0.001 ? "1" : "0");
-      const leftEdge = pillCenter[0] - widths[0] / 2;
-      const rightEdge = pillCenter[1] + widths[1] / 2;
-      const pointers = [0, 1].map((index) => {
-        const from = blend > 0.5 ? leftEdge : pillCenter[index] - widths[index] / 2;
-        const to = blend > 0.5 ? rightEdge : pillCenter[index] + widths[index] / 2;
-        return clamp(thumbs[index], from + 12, Math.max(from + 12, to - 12));
-      });
-      if (pointers[1] - pointers[0] < 24 && blend > 0.5) {
-        const center = clamp((thumbs[0] + thumbs[1]) / 2, leftEdge + 24, Math.max(leftEdge + 24, rightEdge - 24));
-        pointers[0] = center - 12;
-        pointers[1] = center + 12;
-      }
-      write(parts[7], "transform", `${at(pointers[0])} translateX(-50%)`);
-      write(parts[8], "transform", `${at(pointers[1])} translateX(-50%)`);
-      const singleOpacity = clamp((0.385 - blend) / 0.315, 0, 1);
-      const mergedOpacity = clamp((blend - 0.58) / 0.38, 0, 1);
-      [0, 1].forEach((index) => {
-        write(parts[9 + index], "transform", `${at(pillCenter[index])} translateX(-50%)`);
-        write(parts[9 + index], "opacity", fixed(singleOpacity, 3));
-      });
-      write(parts[11], "transform", `${at((pillCenter[0] + pillCenter[1]) / 2)} translateX(-50%) scale(${fixed(0.94 + 0.06 * mergedOpacity, 4)})`);
-      write(parts[11], "opacity", fixed(mergedOpacity, 3));
-
-      query(`.${styles.preset}`).forEach((preset, index) => {
-        write(preset, "transform", `${at(engineRef.current.presetX[index] ?? 0)} translateX(-50%) scale(${fixed(1 + (engineRef.current.pulse[index]?.x ?? 0), 4)})`);
-      });
-    };
-
-    const stepAll = (dt: number) => {
-      let moving = false;
-      const jump = live.current.reduced;
-      for (let index = 0; index < 2; index += 1) {
-        const body = engineRef.current.pos[index];
-        if (engineRef.current.glide[index] && !jump) {
-          advance(body, engineRef.current.target[index], GLIDE.k, GLIDE.c, dt);
-          if (settled(body, engineRef.current.target[index], 0.02)) engineRef.current.glide[index] = false;
-          else moving = true;
-        } else {
-          body.x = engineRef.current.target[index];
-          body.v = 0;
-          engineRef.current.glide[index] = false;
-        }
-        const level = engineRef.current.level[index];
-        if (jump) level.x = engineRef.current.levelTarget[index];
-        else {
-          advance(level, engineRef.current.levelTarget[index], 500, 45, dt);
-          if (!settled(level, engineRef.current.levelTarget[index], 0.002)) moving = true;
-        }
-        const follow = engineRef.current.follow[index];
-        if (jump) follow.x = body.x;
-        else {
-          advance(follow, body.x, TRAIL.k, TRAIL.c, dt);
-          if (!settled(follow, body.x, 0.02)) moving = true;
-        }
-      }
-      const separate = (engineRef.current.textWidth[0] + engineRef.current.textWidth[1]) / 2 + 24;
-      const distance = engineRef.current.follow[1].x - engineRef.current.follow[0].x;
-      if (engineRef.current.merged ? distance > separate + 8 : distance < separate + 4) engineRef.current.merged = !engineRef.current.merged;
-      const mergeTarget = engineRef.current.merged ? 1 : 0;
-      if (jump) engineRef.current.merge.x = mergeTarget;
-      else {
-        advance(engineRef.current.merge, mergeTarget, GLIDE.k, GLIDE.c, dt);
-        if (!settled(engineRef.current.merge, mergeTarget, 0.002)) moving = true;
-      }
-      const half = Math.max(28, (engineRef.current.textWidth[2] + 24) / 2);
-      for (let index = 0; index < 2; index += 1) {
-        const target = engineRef.current.merged ? half : engineRef.current.textWidth[index] + 24;
-        if (jump) engineRef.current.pill[index].x = target;
-        else {
-          advance(engineRef.current.pill[index], target, GLIDE.k, GLIDE.c, dt);
-          if (!settled(engineRef.current.pill[index], target, 0.02)) moving = true;
-        }
-      }
-      for (const pulse of engineRef.current.pulse) {
-        if (jump) { pulse.x = 0; pulse.v = 0; continue; }
-        advance(pulse, 0, PULSE.k, PULSE.c, dt);
-        if (!settled(pulse, 0, 0.0005)) moving = true;
-      }
-      return moving;
-    };
-
-    const tick = () => {
-      engineRef.current.frame = 0;
-      const now = performance.now();
-      let elapsed = Math.min(0.064, (now - engineRef.current.last) / 1000);
-      engineRef.current.last = now;
-      let moving = true;
-      while (elapsed > 0 && moving) {
-        moving = stepAll(Math.min(SUBSTEP, elapsed));
-        elapsed -= SUBSTEP;
-      }
-      if (elapsed <= 0 && moving === true) moving = stepAll(0) || moving;
-      render();
-      if (moving && engineRef.current.visible && !document.hidden) engineRef.current.frame = requestAnimationFrame(tick);
-    };
-    tickRef.current = tick;
-
-    const observer = typeof IntersectionObserver === "undefined" ? null : new IntersectionObserver(([entry]) => {
-      engineRef.current.visible = entry.isIntersecting;
-      if (engineRef.current.visible) wake();
-    });
-    observer?.observe(root);
-    const onVisibility = () => { if (!document.hidden) wake(); };
-    document.addEventListener("visibilitychange", onVisibility);
-    wake();
-    return () => {
-      observer?.disconnect();
-      document.removeEventListener("visibilitychange", onVisibility);
-      cancelAnimationFrame(engineRef.current.frame);
-      engineRef.current.frame = 0;
-    };
-  }, [wake]);
-
-  // Width drives the tick count, about one every 7px, and where the presets sit.
-  const presetKey = presets.map((preset) => `${preset.value}:${preset.label}`).join("|");
   useLayoutEffect(() => {
+    const engine = createEngine(configRef, { root: rootRef, scale: scaleRef, ticks: tickRefs, fill: fillRef, knobs: knobRefs, marks: markRefs, pills: pillRefs, texts: textRefs, pointers: pointerRefs }, setDragging);
+    engineRef.current = engine;
     const scale = scaleRef.current;
-    const root = rootRef.current;
-    if (!scale || !root) return;
     const measure = () => {
-      const width = Math.max(0, scale.clientWidth - INSET * 2);
-      engineRef.current.width = width;
-      setTickCount(width > 0 ? Math.round(width / TICK_GAP) + 1 : 0);
-      const labels = Array.from(root.querySelectorAll<HTMLElement>(`.${styles.preset}`));
-      const values = presetKey ? presetKey.split("|").map((part) => Number(part.slice(0, part.indexOf(":")))) : [];
-      const spots = values.map((amount, index) => ({ index, x: ((amount - min) / span) * width, size: labels[index]?.offsetWidth ?? 0 })).sort((a, b) => a.x - b.x);
-      // Labels are nudged apart when they would overlap; the stops stay on the exact values.
-      for (let pass = 0; pass < 4; pass += 1) {
-        for (let index = 1; index < spots.length; index += 1) {
-          const before = spots[index - 1];
-          const after = spots[index];
-          const overlap = before.x + before.size / 2 + 4 - (after.x - after.size / 2);
-          if (overlap > 0) { before.x -= overlap / 2; after.x += overlap / 2; }
-        }
-      }
-      engineRef.current.presetX = [];
-      spots.forEach((spot) => { engineRef.current.presetX[spot.index] = spot.x; });
-      while (engineRef.current.pulse.length < values.length) engineRef.current.pulse.push(spring());
-      const current = live.current.value;
-      for (let index = 0; index < 2; index += 1) {
-        const px = ((current[index] - min) / span) * width;
-        engineRef.current.target[index] = px;
-        if (!engineRef.current.ready || live.current.dragging === null) {
-          engineRef.current.pos[index].x = px;
-          engineRef.current.pos[index].v = 0;
-          engineRef.current.follow[index].x = px;
-          engineRef.current.follow[index].v = 0;
-        }
-      }
-      if (!engineRef.current.ready && width > 0) {
-        const separate = (engineRef.current.textWidth[0] + engineRef.current.textWidth[1]) / 2 + 24;
-        engineRef.current.merged = engineRef.current.pos[1].x - engineRef.current.pos[0].x < separate + 4;
-        engineRef.current.merge.x = engineRef.current.merged ? 1 : 0;
-        engineRef.current.ready = true;
-      }
-      wake();
+      const count = clamp(Math.round(((scale?.getBoundingClientRect().width ?? 0) - 28) / 7) + 1, 12, 121);
+      setTickCount(previous => (previous === count ? previous : count));
+      engine.measure();
     };
     measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(scale);
-    return () => observer.disconnect();
-  }, [min, presetKey, span, wake]);
+    const resize = new ResizeObserver(measure);
+    if (scale) resize.observe(scale);
+    let onScreen = true;
+    const visibility = () => engine.setVisible(onScreen && document.visibilityState === "visible");
+    const intersection = new IntersectionObserver(([entry]) => {
+      onScreen = entry.isIntersecting;
+      visibility();
+    });
+    if (scale) intersection.observe(scale);
+    document.addEventListener("visibilitychange", visibility);
+    return () => {
+      resize.disconnect();
+      intersection.disconnect();
+      document.removeEventListener("visibilitychange", visibility);
+      engine.dispose();
+      engineRef.current = null;
+    };
+  }, []);
 
-  const lowText = format(low);
-  const highText = format(high);
-  const mergedText = low === high ? lowText : `${lowText} – ${highText}`;
-
-  // Text widths are read only when a bubble's text changes.
-  useLayoutEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-    const texts = Array.from(root.querySelectorAll<HTMLElement>(`.${styles.text}`));
-    const first = engineRef.current.textWidth[0] === 28 && engineRef.current.textWidth[1] === 28;
-    texts.forEach((node, index) => { engineRef.current.textWidth[index] = node.offsetWidth; });
-    if (first) {
-      engineRef.current.pill[0].x = engineRef.current.textWidth[0] + 24;
-      engineRef.current.pill[1].x = engineRef.current.textWidth[1] + 24;
-      const separate = (engineRef.current.textWidth[0] + engineRef.current.textWidth[1]) / 2 + 24;
-      if (engineRef.current.width > 0) {
-        engineRef.current.merged = engineRef.current.pos[1].x - engineRef.current.pos[0].x < separate + 4;
-        engineRef.current.merge.x = engineRef.current.merged ? 1 : 0;
-        if (engineRef.current.merged) engineRef.current.pill[0].x = engineRef.current.pill[1].x = Math.max(28, (engineRef.current.textWidth[2] + 24) / 2);
-      }
-    }
-    wake();
-  }, [lowText, highText, mergedText, tickCount, wake]);
-
-  // A value set from outside, by a key or by a preset glides the thumb there; a dragged thumb is already under the pointer.
   useEffect(() => {
-    for (let index = 0; index < 2; index += 1) {
-      if (live.current.dragging === index) continue;
-      const px = toPx(index === 0 ? low : high);
-      if (Math.abs(px - engineRef.current.target[index]) > 0.001) {
-        engineRef.current.target[index] = px;
-        engineRef.current.glide[index] = true;
-      }
-    }
-    wake();
-  }, [high, low, toPx, tickCount, wake]);
-
-  const setLevel = useCallback((index: number, amount: number) => {
-    engineRef.current.levelTarget[index] = amount;
-    wake();
-  }, [wake]);
-  const hover = useRef<[boolean, boolean]>([false, false]);
-  const focus = useRef<[boolean, boolean]>([false, false]);
-  const refreshLevel = useCallback((index: number) => {
-    setLevel(index, live.current.dragging === index ? 2 : hover.current[index] || focus.current[index] ? 1 : 0);
-  }, [setLevel]);
-
-  const limits = (index: number, current: [number, number]): [number, number] => (index === 0 ? [min, Math.max(min, current[1] - gap)] : [Math.min(max, current[0] + gap), max]);
-
-  const moveTo = (index: number, raw: number, glide: boolean) => {
-    const width = engineRef.current.width;
-    if (width <= 0) return;
-    const current = live.current.value;
-    const [from, to] = limits(index, current);
-    const fromPx = toPx(from);
-    const toPxLimit = toPx(to);
-    let px = clamp(raw, fromPx, toPxLimit);
-    let next = clamp(snap(min + (px / width) * span), from, to);
-    let held = -1;
-    if (magnet > 0) {
-      presets.forEach((preset, presetIndex) => {
-        if (preset.value < from || preset.value > to) return;
-        const center = toPx(preset.value);
-        const offset = raw - center;
-        if (Math.abs(offset) > magnet) return;
-        // Inside a preset's reach the thumb follows a power curve: it lingers near the preset and lets go at the edge.
-        const pulled = center + Math.sign(offset) * magnet * (Math.abs(offset) / magnet) ** 2.4;
-        px = clamp(pulled, fromPx, toPxLimit);
-        if (Math.abs(pulled - center) < magnet / 4) {
-          next = preset.value;
-          held = presetIndex;
-        } else next = clamp(snap(min + (px / width) * span), from, to);
-      });
-    }
-    if (held !== live.current.held) {
-      live.current.held = held;
-      if (held >= 0 && !live.current.reduced) {
-        const pulse = engineRef.current.pulse[held];
-        if (pulse) pulse.v = 0.9;
-        if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(8);
-      }
-    }
-    engineRef.current.target[index] = px;
-    if (glide) engineRef.current.glide[index] = true;
-    commit(index === 0 ? [next, current[1]] : [current[0], next], false);
-    wake();
-  };
-
-  const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (disabled || event.button !== 0) return;
-    const scale = scaleRef.current;
-    if (!scale) return;
-    const left = scale.getBoundingClientRect().left + INSET;
-    const raw = event.clientX - left;
-    const knob = (event.target as HTMLElement).closest<HTMLElement>("[data-index]");
-    let index: number;
-    if (knob) index = Number(knob.dataset.index);
-    else {
-      const [first, second] = [engineRef.current.pos[0].x, engineRef.current.pos[1].x];
-      index = Math.abs(raw - first) < Math.abs(raw - second) || (Math.abs(raw - first) === Math.abs(raw - second) && raw < first) ? 0 : 1;
-    }
-    event.preventDefault();
-    scale.setPointerCapture(event.pointerId);
-    live.current.dragging = index;
-    live.current.grab = knob ? raw - engineRef.current.pos[index].x : 0;
-    live.current.held = -1;
-    setDragging(index);
-    refreshLevel(index);
-    if (event.pointerType !== "mouse") scale.querySelectorAll<HTMLElement>("[data-index]")[index]?.focus({ preventScroll: true });
-    // A press on the scale moves the value under the finger at once while the thumb glides there.
-    if (!knob) moveTo(index, raw, true);
-    else wake();
-  };
-
-  const onPointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    const index = live.current.dragging;
-    const scale = scaleRef.current;
-    if (index === null || !scale) return;
-    moveTo(index, event.clientX - scale.getBoundingClientRect().left - INSET - live.current.grab, false);
-  };
-
-  const release = () => {
-    const index = live.current.dragging;
-    if (index === null) return;
-    live.current.dragging = null;
-    live.current.held = -1;
-    setDragging(null);
-    refreshLevel(index);
-    const current = live.current.value;
-    engineRef.current.target[index] = toPx(current[index]);
-    engineRef.current.glide[index] = true;
-    callbacks.current.onValueCommit?.(current);
-    wake();
-  };
-
-  const onKeyDown = (index: number) => (event: KeyboardEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    const current = live.current.value;
-    const [from, to] = limits(index, current);
-    const big = Math.max(step, Math.round((largeStep ?? span / 10) / step) * step);
-    const amount = event.shiftKey ? big : step;
-    let next = current[index];
-    if (event.key === "ArrowRight" || event.key === "ArrowUp") next = snap(next + amount);
-    else if (event.key === "ArrowLeft" || event.key === "ArrowDown") next = snap(next - amount);
-    else if (event.key === "PageUp") next = snap(next + big);
-    else if (event.key === "PageDown") next = snap(next - big);
-    else if (event.key === "Home") next = from;
-    else if (event.key === "End") next = to;
-    else return;
-    event.preventDefault();
-    next = clamp(next, from, to);
-    if (next !== current[index]) commit(index === 0 ? [next, current[1]] : [current[0], next], true);
-  };
-
-  const choosePreset = (preset: LensRangePreset) => {
-    if (disabled) return;
-    const current = live.current.value;
-    const nearer = Math.abs(preset.value - current[0]) <= Math.abs(preset.value - current[1]) ? 0 : 1;
-    const index = preset.value < current[0] ? 0 : preset.value > current[1] ? 1 : nearer;
-    const [from, to] = limits(index, current);
-    const next = clamp(preset.value, from, to);
-    commit(index === 0 ? [next, current[1]] : [current[0], next], true);
-  };
+    engineRef.current?.measure();
+  }, [min, max, tickCount]);
 
   const names = thumbLabels ?? [`${label}, minimum`, `${label}, maximum`];
-  const rootStyle = accent ? ({ ...style, "--lr-accent": accent } as CSSProperties) : style;
+  const bubbleTexts = [text(values[0]), text(values[1]), values[0] === values[1] ? text(values[0]) : `${text(values[0])} – ${text(values[1])}`];
+  const rootStyle = { ...(accent ? { "--lr-accent": accent } : null), ...style } as CSSProperties;
 
   return (
-    <div
-      ref={rootRef}
-      className={[styles.root, className].filter(Boolean).join(" ")}
-      style={rootStyle}
-      role="group"
-      aria-label={label}
-      data-dragging={dragging !== null ? "" : undefined}
-      data-disabled={disabled ? "" : undefined}
-    >
+    <div ref={rootRef} className={[styles.root, className].filter(Boolean).join(" ")} style={rootStyle} role="group" aria-label={label} data-disabled={disabled || undefined} data-dragging={dragging !== null || undefined}>
       <span className={styles.label}>{label}</span>
       <div className={styles.bubbles} aria-hidden="true">
-        <span className={styles.cap} />
-        <span className={styles.mid} />
-        <span className={styles.cap} />
-        <span className={styles.cap} />
-        <span className={styles.mid} />
-        <span className={styles.cap} />
-        <span className={styles.bridge} />
-        <span className={styles.pointer} />
-        <span className={styles.pointer} />
-        <span className={styles.text}>{lowText}</span>
-        <span className={styles.text}>{highText}</span>
-        <span className={styles.text} style={{ opacity: 0 }}>{mergedText}</span>
+        {[0, 1, 2, 3, 4, 5].map(index => (
+          <span key={index} ref={node => { pillRefs.current[index] = node; }} className={index % 3 === 1 ? styles.mid : styles.cap} />
+        ))}
+        <span ref={node => { pillRefs.current[6] = node; }} className={styles.bridge} />
+        {[0, 1].map(index => (
+          <span key={`p${index}`} ref={node => { pointerRefs.current[index] = node; }} className={styles.pointer} />
+        ))}
+        {bubbleTexts.map((content, index) => (
+          <span key={`t${index}`} ref={node => { textRefs.current[index] = node; }} className={styles.text}>{content}</span>
+        ))}
       </div>
-      <div ref={scaleRef} className={styles.scale} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={release} onPointerCancel={release} onLostPointerCapture={release}>
+      <div
+        ref={scaleRef}
+        className={styles.scale}
+        onPointerDown={event => engineRef.current?.down(event)}
+        onPointerMove={event => engineRef.current?.move(event)}
+        onPointerUp={event => engineRef.current?.up(event)}
+        onPointerCancel={event => engineRef.current?.up(event)}
+        onLostPointerCapture={event => engineRef.current?.up(event)}
+        onPointerLeave={() => engineRef.current?.hover(null)}
+      >
         <div className={styles.ticks} aria-hidden="true">
           {Array.from({ length: tickCount }, (_, index) => (
-            <span key={index} className={styles.tick}><span className={styles.tickOn} /></span>
+            <span
+              key={index}
+              ref={node => {
+                tickRefs.current[index] = node;
+                if (index === tickCount - 1) tickRefs.current.length = tickCount;
+              }}
+              className={styles.tick}
+            >
+              <span className={styles.tickOn} />
+            </span>
           ))}
         </div>
         <span className={styles.track} aria-hidden="true">
-          <span className={styles.fill} />
-          {presets.map((preset) => <span key={preset.value} className={styles.stop} style={{ left: `${((preset.value - min) / span) * 100}%` }} />)}
+          <span ref={fillRef} className={styles.fill} />
+          {marks.map(preset => (
+            <span key={preset.value} className={styles.stop} style={{ left: `${((preset.value - min) / span) * 100}%` }} />
+          ))}
         </span>
         <div className={styles.knobs}>
-          {[0, 1].map((index) => {
-            const [from, to] = limits(index, value);
-            return (
-              <div
-                key={index}
-                role="slider"
-                data-index={index}
-                className={styles.knob}
-                tabIndex={disabled ? -1 : 0}
-                aria-label={names[index]}
-                aria-valuemin={from}
-                aria-valuemax={to}
-                aria-valuenow={value[index]}
-                aria-valuetext={format(value[index])}
-                aria-orientation="horizontal"
-                aria-disabled={disabled || undefined}
-                onKeyDown={onKeyDown(index)}
-                onPointerEnter={(event) => { if (event.pointerType === "mouse") { hover.current[index] = true; refreshLevel(index); } }}
-                onPointerLeave={() => { hover.current[index] = false; refreshLevel(index); }}
-                onFocus={() => { focus.current[index] = true; refreshLevel(index); }}
-                onBlur={() => { focus.current[index] = false; refreshLevel(index); }}
-              >
-                <span className={styles.knobFace} />
-              </div>
-            );
-          })}
+          {[0, 1].map(index => (
+            <div
+              key={index}
+              ref={node => { knobRefs.current[index] = node; }}
+              role="slider"
+              data-index={index}
+              className={styles.knob}
+              tabIndex={disabled ? -1 : 0}
+              aria-label={names[index]}
+              aria-valuemin={index === 0 ? min : Number((values[0] + gap).toFixed(decimals))}
+              aria-valuemax={index === 0 ? Number((values[1] - gap).toFixed(decimals)) : max}
+              aria-valuenow={values[index]}
+              aria-valuetext={text(values[index])}
+              aria-orientation="horizontal"
+              aria-disabled={disabled || undefined}
+              onKeyDown={event => engineRef.current?.key(index, event)}
+              onFocus={() => engineRef.current?.focus(index, true)}
+              onBlur={() => engineRef.current?.focus(index, false)}
+            >
+              <span className={styles.knobFace} />
+            </div>
+          ))}
         </div>
       </div>
-      {presets.length > 0 ? (
+      {marks.length ? (
         <div className={styles.presets}>
-          {presets.map((preset) => (
-            <button key={preset.value} type="button" className={styles.preset} aria-label={`${preset.label}, ${format(preset.value)}`} disabled={disabled} onClick={() => choosePreset(preset)}>
-              <span className={styles.presetDot} aria-hidden="true" style={{ opacity: dragging !== null && value[dragging] === preset.value ? 1 : 0 }} />
+          {marks.map((preset, index) => (
+            <button
+              key={`${preset.value}-${preset.label}`}
+              ref={node => { markRefs.current[index] = node; }}
+              type="button"
+              className={styles.preset}
+              disabled={disabled}
+              onClick={() => engineRef.current?.choose(index)}
+              aria-label={`${preset.label}, ${text(preset.value)}`}
+            >
+              <span className={styles.presetDot} aria-hidden="true" />
               {preset.label}
             </button>
           ))}
         </div>
       ) : null}
-      {name ? (
-        <>
-          <input type="hidden" name={name} value={low} disabled={disabled} />
-          <input type="hidden" name={name} value={high} disabled={disabled} />
-        </>
-      ) : null}
+      {name ? values.map((amount, index) => <input key={index} type="hidden" name={name} value={amount} disabled={disabled} />) : null}
     </div>
   );
 }

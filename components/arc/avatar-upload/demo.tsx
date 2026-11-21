@@ -97,10 +97,10 @@ export default function Demo() {
   return (
     <div className={styles.dDemo}>
       <section className={styles.dCard} aria-labelledby="avatar-upload-demo-title">
-        <header className={styles.dHeader}>
+        <div className={styles.dHeader}>
           <h3 id="avatar-upload-demo-title" className={styles.dTitle}>Profile</h3>
           <p className={styles.dLede}>Click or drop a photo on the avatar. Uploads are simulated.</p>
-        </header>
+        </div>
         <AvatarUpload ref={upload} name="Chloe Nguyen" src={portrait("chloe-nguyen")} onUpload={onUpload} onRemove={() => {}} />
         <div className={styles.dTools}>
           <div className={styles.dGroup}>
