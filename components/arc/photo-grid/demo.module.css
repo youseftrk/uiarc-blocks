@@ -1,0 +1,27 @@
+.demo {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+.frame {
+  height: 380px;
+  min-width: 0;
+}
+
+.hint {
+  position: relative;
+  min-height: 2.8em;
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.hintText {
+  display: block;
+}
