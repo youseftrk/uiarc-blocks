@@ -1,0 +1,6 @@
+.demo {
+  display: grid;
+  width: 100%;
+  min-height: 416px;
+  place-items: center;
+}

@@ -1,0 +1,217 @@
+.root {
+  position: relative;
+  flex: 0 0 auto;
+  width: 56px;
+  height: 56px;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.field {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: calc(var(--orbit-reach) * 2);
+  height: calc(var(--orbit-reach) * 2);
+  margin: calc(var(--orbit-reach) * -1) 0 0 calc(var(--orbit-reach) * -1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.root[data-open] .field {
+  pointer-events: auto;
+}
+
+.track {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.track path {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.lens {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  background: var(--foreground);
+  box-shadow: var(--shadow-raised);
+  pointer-events: none;
+}
+
+.trigger {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: var(--foreground);
+  color: var(--surface);
+  box-shadow: var(--shadow-raised);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 180ms var(--ease-standard, ease),
+    color 180ms var(--ease-standard, ease),
+    border-color 180ms var(--ease-standard, ease);
+}
+
+.trigger[data-open] {
+  border-color: color-mix(in oklab, var(--border-strong) 55%, transparent);
+  background: color-mix(in oklab, var(--surface) 76%, transparent);
+  color: var(--foreground);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+
+.trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.trigger:focus-visible,
+.item:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+
+.glyph {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+}
+
+.menu {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 55%, transparent);
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--surface) 94%, transparent);
+  color: var(--foreground);
+  box-shadow: var(--shadow-raised);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 140ms var(--ease-standard, ease),
+    color 140ms var(--ease-standard, ease),
+    border-color 140ms var(--ease-standard, ease),
+    box-shadow 140ms var(--ease-standard, ease);
+}
+
+.item[data-danger] {
+  color: var(--danger);
+}
+
+.item[data-active] {
+  border-color: transparent;
+  background: transparent;
+  color: var(--surface);
+  box-shadow: none;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+}
+
+.icon svg {
+  width: 20px;
+  height: 20px;
+  stroke-width: 1.75;
+}
+
+.pillAnchor {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.pill {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--border-strong) 55%, transparent);
+  border-radius: 9999px;
+  background: color-mix(in oklab, var(--surface) 76%, transparent);
+  color: var(--foreground);
+  box-shadow: var(--shadow-raised);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+
+.pillRow {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0 14px;
+  white-space: nowrap;
+}
+
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  visibility: hidden;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
