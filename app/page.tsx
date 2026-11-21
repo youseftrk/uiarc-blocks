@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import Link from "next/link";
 import { AgentRun } from "@/components/arc/blocks/agent-run";
 import { AiChat } from "@/components/arc/blocks/ai-chat";
 import { InvitePeople } from "@/components/arc/blocks/invite-people";
@@ -23,7 +24,12 @@ export default function Home() {
           <div className={styles.head}>
             <div className={styles.headRow}>
               <h1 id="blocks-title">Complete blocks, ready to ship</h1>
-              <ThemeToggle className={styles.theme} />
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Link href="/components" className={styles.theme} style={{ textDecoration: "none" }}>
+                  All 252 Components →
+                </Link>
+                <ThemeToggle className={styles.theme} />
+              </div>
             </div>
             <p>Whole flows built from the same parts, including interfaces for the AI products you build.</p>
           </div>
