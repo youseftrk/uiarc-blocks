@@ -1,0 +1,22 @@
+.demo {
+  display: flex;
+  width: 100%;
+  max-width: 760px;
+  gap: 24px;
+  align-items: center;
+  flex-direction: column;
+}
+.controls {
+  display: flex;
+  max-width: 100%;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.stage {
+  display: flex;
+  width: 100%;
+  min-height: 412px;
+  align-items: flex-start;
+  justify-content: center;
+}
