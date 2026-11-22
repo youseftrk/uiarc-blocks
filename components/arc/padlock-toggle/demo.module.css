@@ -1,0 +1,7 @@
+.demo {
+  display: grid;
+  align-items: center;
+  justify-items: center;
+  width: min(420px, 100%);
+  padding: 20px 0;
+}

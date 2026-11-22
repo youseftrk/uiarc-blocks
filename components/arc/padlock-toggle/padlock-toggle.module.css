@@ -1,0 +1,399 @@
+.root {
+  --pl-accent: oklch(58% 0.15 250);
+  --pl-w: min(var(--pl-size, 132px), 56cqi);
+  --u: calc(var(--pl-w) / 120);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  width: 100%;
+  container-type: inline-size;
+}
+
+.pad {
+  position: relative;
+  width: var(--pl-w);
+  height: calc(var(--u) * 176);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pad:focus {
+  outline: none;
+}
+
+.pad:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 6px;
+  border-radius: 16px;
+}
+
+.pad:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.rig,
+.lock,
+.topLayer,
+.frontLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.rig {
+  transform-origin: 50% 70%;
+}
+
+.topLayer,
+.frontLayer {
+  transform-origin: 50% 96.6%;
+}
+
+.floor {
+  position: absolute;
+  top: calc(var(--u) * 160);
+  left: calc(var(--u) * 6);
+  width: calc(var(--u) * 108);
+  height: calc(var(--u) * 18);
+  background:
+    radial-gradient(closest-side, oklch(0% 0 0 / 0.28), transparent 70%),
+    radial-gradient(closest-side, oklch(0% 0 0 / 0.2), transparent);
+  opacity: 0.8;
+}
+
+.top {
+  position: absolute;
+  top: calc(var(--u) * 80);
+  left: calc(var(--u) * 13);
+  width: calc(var(--u) * 94);
+  height: calc(var(--u) * 14);
+  border-radius: calc(var(--u) * 7);
+  background:
+    repeating-linear-gradient(oklch(100% 0 0 / 0.2) 0, oklch(100% 0 0 / 0.2) 1px, transparent 1px, transparent 3px),
+    linear-gradient(oklch(98% 0.003 250), oklch(93% 0.004 250));
+  box-shadow:
+    inset 0 0 0 1px oklch(0% 0 0 / 0.2),
+    inset 0 1px 0 oklch(100% 0 0 / 0.95);
+}
+
+.hole {
+  position: absolute;
+  top: calc(var(--u) * 2);
+  width: calc(var(--u) * 17);
+  height: calc(var(--u) * 6);
+  border-radius: 50%;
+  background: radial-gradient(at 50% 30%, oklch(14% 0 0) 0, oklch(14% 0 0) 40%, oklch(34% 0 0) 100%);
+  box-shadow: 0 calc(var(--u) * 0.5) 0 oklch(100% 0 0 / 0.45);
+}
+
+.hole[data-leg="long"] {
+  left: calc(var(--u) * 8.5);
+}
+
+.hole[data-leg="short"] {
+  left: calc(var(--u) * 68.5);
+}
+
+.ao {
+  position: absolute;
+  top: calc(var(--u) * -3);
+  right: 0;
+  bottom: 0;
+  left: 0;
+  background:
+    radial-gradient(calc(var(--u) * 13) calc(var(--u) * 5.5) at calc(var(--u) * 17) calc(var(--u) * 8), oklch(0% 0 0 / 0.3), transparent),
+    radial-gradient(calc(var(--u) * 13) calc(var(--u) * 5.5) at calc(var(--u) * 77) calc(var(--u) * 8), oklch(0% 0 0 / 0.3), transparent);
+  opacity: 0;
+}
+
+.shackle {
+  position: absolute;
+  top: calc(var(--u) * 22);
+  left: calc(var(--u) * 14);
+  width: calc(var(--u) * 92);
+  height: calc(var(--u) * 112);
+  transform-origin: 17.39% 56.25%;
+}
+
+.art,
+.shade,
+.spec {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.barHi {
+  stop-color: oklch(95% 0.003 250);
+}
+
+.barMid {
+  stop-color: oklch(81% 0.005 250);
+}
+
+.barLo {
+  stop-color: oklch(70% 0.006 250);
+}
+
+.barEdge,
+.barBody,
+.barCore,
+.groove,
+.shadeBar,
+.specBar {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.barEdge {
+  stroke: oklch(52% 0.006 250);
+  stroke-width: 13;
+}
+
+.barBody {
+  stroke-width: 10.6;
+}
+
+.barCore {
+  stroke: oklch(98% 0.002 250);
+  stroke-width: 4.2;
+  opacity: 0.85;
+}
+
+.groove {
+  stroke: oklch(0% 0 0 / 0.3);
+  stroke-width: 13;
+  stroke-linecap: butt;
+}
+
+.shadeBar {
+  stroke: oklch(0% 0 0 / 0.55);
+  stroke-width: 13;
+}
+
+.specBar {
+  stroke: oklch(100% 0 0);
+  stroke-width: 1.7;
+}
+
+.body {
+  position: absolute;
+  top: calc(var(--u) * 88);
+  left: calc(var(--u) * 10);
+  width: calc(var(--u) * 100);
+  height: calc(var(--u) * 82);
+  overflow: hidden;
+  border-radius: calc(var(--u) * 16) calc(var(--u) * 16) calc(var(--u) * 22) calc(var(--u) * 22);
+  background:
+    linear-gradient(90deg, oklch(0% 0 0 / 0.16) 0, transparent 12%, transparent 88%, oklch(0% 0 0 / 0.16) 100%),
+    repeating-linear-gradient(oklch(100% 0 0 / 0.2) 0, oklch(100% 0 0 / 0.2) 1px, transparent 1px, transparent 3px),
+    repeating-linear-gradient(transparent 0, transparent 4px, oklch(0% 0 0 / 0.035) 4px, oklch(0% 0 0 / 0.035) 5px, transparent 5px, transparent 9px),
+    linear-gradient(oklch(93% 0.004 250) 0, oklch(86% 0.005 250) 34%, oklch(77% 0.006 250) 70%, oklch(86% 0.005 250) 90%, oklch(67% 0.006 250) 100%);
+  box-shadow:
+    inset 0 calc(var(--u) * 1.2) 0 oklch(100% 0 0 / 0.95),
+    inset calc(var(--u) * 1) 0 calc(var(--u) * 1.5) oklch(100% 0 0 / 0.45),
+    inset calc(var(--u) * -1) 0 calc(var(--u) * 1.5) oklch(0% 0 0 / 0.16),
+    inset 0 calc(var(--u) * -2) calc(var(--u) * 3) oklch(0% 0 0 / 0.16),
+    0 0 0 1px oklch(0% 0 0 / 0.2);
+}
+
+.chamfer {
+  position: absolute;
+  inset: calc(var(--u) * 3.5);
+  border-radius: calc(var(--u) * 12.5) calc(var(--u) * 12.5) calc(var(--u) * 18.5) calc(var(--u) * 18.5);
+  box-shadow:
+    inset 0 1px 0 oklch(0% 0 0 / 0.07),
+    inset 0 -1px 0 oklch(100% 0 0 / 0.45),
+    0 1px 0 oklch(100% 0 0 / 0.45),
+    0 -1px 0 oklch(0% 0 0 / 0.05);
+}
+
+.escutcheon {
+  position: absolute;
+  top: calc(var(--u) * 29);
+  left: calc(var(--u) * 35);
+  width: calc(var(--u) * 30);
+  height: calc(var(--u) * 30);
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, oklch(90% 0.004 250), oklch(78% 0.006 250) 72%);
+  box-shadow:
+    inset 0 calc(var(--u) * 1.4) calc(var(--u) * 2.2) oklch(0% 0 0 / 0.3),
+    inset 0 calc(var(--u) * -0.6) 0 oklch(100% 0 0 / 0.45),
+    0 calc(var(--u) * 0.7) 0 oklch(100% 0 0 / 0.95),
+    0 calc(var(--u) * -0.5) 0 oklch(0% 0 0 / 0.08);
+}
+
+.spill,
+.keyhole,
+.glow {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.spill {
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--pl-accent) 55%, transparent), transparent 68%);
+  opacity: 0;
+}
+
+.glow {
+  opacity: 0;
+}
+
+.wellTop {
+  stop-color: oklch(10% 0 0);
+}
+
+.wellBottom {
+  stop-color: oklch(30% 0 0);
+}
+
+.litCore {
+  stop-color: color-mix(in oklab, var(--pl-accent), white 55%);
+}
+
+.litMid {
+  stop-color: var(--pl-accent);
+}
+
+.litEdge {
+  stop-color: color-mix(in oklab, var(--pl-accent), black 30%);
+}
+
+.bloom {
+  position: absolute;
+  inset: calc(var(--u) * -7);
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--pl-accent), white 45%), color-mix(in oklab, var(--pl-accent) 40%, transparent) 36%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ring {
+  position: absolute;
+  inset: calc(var(--u) * 2);
+  border: 1.5px solid var(--pl-accent);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sheen {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--u) * 44);
+  background: linear-gradient(90deg, transparent 0, oklch(100% 0 0 / 0.28) 30%, oklch(100% 0 0 / 0.85) 50%, oklch(100% 0 0 / 0.28) 70%, transparent 100%);
+  opacity: 0.42;
+}
+
+.sweep {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(var(--u) * 22);
+  background: linear-gradient(90deg, transparent, oklch(100% 0 0 / 0.95) 50%, transparent);
+  opacity: 0;
+}
+
+.caption {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  max-width: 100%;
+  margin: 16px 0 0;
+  text-align: center;
+}
+
+.words,
+.descs {
+  display: grid;
+  justify-items: center;
+  max-width: 100%;
+}
+
+.word,
+.desc {
+  grid-area: 1 / 1;
+  opacity: 0;
+  filter: blur(4px);
+  transition:
+    transform 0.44s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word {
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 28px;
+  white-space: nowrap;
+}
+
+.desc {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+  transition-delay: 0.04s;
+}
+
+.word[data-w="on"] {
+  transform: translateY(-60%);
+}
+
+.word[data-w="off"] {
+  transform: translateY(60%);
+}
+
+.desc[data-w="on"] {
+  transform: translateY(-40%);
+}
+
+.desc[data-w="off"] {
+  transform: translateY(40%);
+}
+
+.word[data-active],
+.desc[data-active] {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+.root[data-disabled] .caption {
+  opacity: 0.6;
+}
+
+.root[data-reduced] .word,
+.root[data-reduced] .desc {
+  transform: none;
+  filter: none;
+  transition: opacity 0.2s linear;
+}
+
+.root[data-reduced] [data-n] {
+  transition: opacity 0.2s linear;
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

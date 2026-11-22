@@ -1,0 +1,40 @@
+.root { --ir-accent: var(--accent); --ir-radius: var(--radius-panel); --ir-inset: 12px; --ir-chip-h: 28px; --ir-font: 13px; --ir-ring: 14px; --ir-gap: 8px; position: relative; inline-size: 100%; max-inline-size: 560px; border-radius: var(--ir-radius); overflow: hidden; isolation: isolate; background: var(--surface-muted); color: var(--foreground); contain: layout paint; }
+.root::after { content: ""; position: absolute; inset: 0px; border-radius: inherit; box-shadow: inset 0 0 0 1px color-mix(in oklab,var(--foreground) 7%,transparent); pointer-events: none; z-index: 3; }
+.sm { --ir-radius: var(--radius-control); --ir-inset: 8px; --ir-chip-h: 24px; --ir-font: 12px; --ir-ring: 12px; --ir-gap: 6px; }
+.lg { --ir-radius: var(--radius-surface); --ir-inset: 16px; --ir-chip-h: 32px; --ir-font: 14px; --ir-ring: 16px; }
+.canvas { position: absolute; inset: 0px; display: block; inline-size: 100%; block-size: 100%; }
+.probe { position: absolute; inline-size: 0px; block-size: 0px; overflow: hidden; visibility: hidden; }
+.chip { position: absolute; inset-inline-start: var(--ir-inset); inset-block-end: var(--ir-inset); z-index: 1; display: flex; align-items: center; block-size: var(--ir-chip-h); max-inline-size: calc(100% - var(--ir-inset) * 2); overflow: hidden; border: 1px solid color-mix(in oklab,var(--foreground) 8%,transparent); border-radius: 999px; background: color-mix(in oklab,var(--surface) 72%,transparent); backdrop-filter: blur(16px) saturate(1.4); box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px, rgba(0, 0, 0, 0.06) 0px 4px 12px; color: var(--foreground); will-change: transform, opacity; }
+.chipContent { position: relative; display: inline-flex; flex: 0 0 auto; align-items: center; block-size: 100%; padding-inline: calc((var(--ir-chip-h) - var(--ir-ring)) / 2) calc(var(--ir-chip-h) * .4); white-space: nowrap; }
+.phase { display: inline-flex; align-items: center; gap: var(--ir-gap); font-size: var(--ir-font); font-weight: 500; line-height: 1; letter-spacing: -0.005em; font-variant-numeric: tabular-nums; }
+.text { display: block; padding-block: 2px; }
+.reserve { display: inline-grid; justify-items: end; padding-block: 2px; }
+.reserve > * { grid-area: 1 / 1; }
+.count { color: var(--text-secondary); font-weight: 400; }
+.ghost { visibility: hidden; }
+.ring { flex: 0 0 auto; inline-size: var(--ir-ring); block-size: var(--ir-ring); transform: rotate(-90deg); }
+.ringTrack { stroke: color-mix(in oklab,var(--foreground) 14%,transparent); }
+.ringArc { stroke: var(--ir-accent); stroke-linecap: round; }
+.spin { animation: 1.4s linear 0s infinite normal none running ir-spin; }
+.doneIcon { flex: 0 0 auto; inline-size: var(--ir-ring); block-size: var(--ir-ring); color: var(--foreground); }
+.errorLayer { position: absolute; inset: 0px; z-index: 2; display: grid; place-items: center; padding: var(--ir-inset); }
+.errorBody { display: flex; flex-direction: column; align-items: center; gap: 12px; max-inline-size: 100%; text-align: center; }
+.sm .errorBody { gap: 8px; }
+.errorTitle { display: inline-flex; align-items: center; gap: 6px; max-inline-size: 100%; color: var(--text-secondary); font-size: var(--ir-font); line-height: 1.35; }
+.errorTitle > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.errorIcon { flex: 0 0 auto; inline-size: 16px; block-size: 16px; color: var(--text-secondary); }
+.sm .errorIcon { inline-size: 14px; block-size: 14px; }
+.srOnly { position: absolute; inline-size: 1px; block-size: 1px; margin: -1px; padding: 0px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border: 0px; }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+.demo { display: flex; flex-direction: column; gap: 14px; inline-size: 100%; max-inline-size: 600px; margin-inline: auto; }
+.header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; }
+.copy { display: flex; flex-direction: column; gap: 3px; min-inline-size: 0px; }
+.prompt { margin: 0px; color: var(--foreground); font-size: 15px; font-weight: 500; line-height: 1.35; letter-spacing: -0.01em; }
+.meta { margin: 0px; color: var(--text-muted); font-size: 13px; line-height: 1.4; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0px, 1fr)); gap: 8px; }
+.grid .tile { max-inline-size: none; }
+.footer { display: flex; justify-content: center; }
+@keyframes ir-spin { 
+  0% { transform: rotate(-90deg); }
+  100% { transform: rotate(270deg); }
+}

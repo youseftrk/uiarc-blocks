@@ -1,0 +1,348 @@
+.root {
+  position: relative;
+  width: 100%;
+  color: var(--foreground);
+  font-size: 12px;
+  line-height: 18px;
+  container-type: inline-size;
+}
+.isBanner { max-width: 760px; }
+.isCard { max-width: 340px; }
+.isPill { width: auto; container-type: normal; }
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.swap { display: grid; min-width: 0; }
+.swapItem {
+  display: flex;
+  min-width: 0;
+  grid-area: 1 / 1;
+  align-items: center;
+}
+.truncate,
+.subText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Ring */
+.ring {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+}
+.ringSvg {
+  position: absolute;
+  inset: 0;
+  transform: rotate(-90deg);
+}
+.ringTrack {
+  fill: none;
+  stroke: color-mix(in oklab, var(--foreground) 14%, transparent);
+}
+.ringValue {
+  fill: none;
+  stroke: var(--accent);
+  stroke-linecap: round;
+  transition: stroke 160ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1));
+}
+.ring[data-tone="warning"] .ringValue { stroke: var(--warning); }
+.ring[data-tone="upgraded"] .ringValue { stroke: var(--success); }
+.ringCenter {
+  position: relative;
+  place-items: center;
+}
+.ringCenter .swapItem { justify-content: center; }
+.ringDays {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 12px;
+  letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+}
+.ringLock { color: var(--text-secondary); }
+.ringCheck { color: var(--success); }
+
+/* Banner */
+.banner {
+  display: grid;
+  min-height: 56px;
+  padding: 8px 8px 8px 14px;
+  column-gap: 12px;
+  grid-template-columns: 28px minmax(0, 1fr) auto auto;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  transition: background-color 200ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1)), border-color 200ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1));
+}
+.banner[data-tone="warning"] {
+  border-color: color-mix(in oklab, var(--warning) 32%, var(--border));
+  background: color-mix(in oklab, var(--warning) 6%, var(--surface-raised));
+}
+.bannerRing { display: flex; }
+.bannerText {
+  display: grid;
+  min-width: 0;
+  row-gap: 1px;
+}
+.bannerTitle {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.bannerSub { color: var(--text-muted); }
+.subInner {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  align-items: center;
+}
+.bannerActions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.icons {
+  display: flex;
+  flex: none;
+  align-items: center;
+}
+.banner > .icons { padding-left: 4px; }
+.iconButton {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background-color 120ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1)), color 120ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1));
+}
+.iconButton:hover,
+.iconButton[data-state="open"] {
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+.iconButton:focus-visible,
+.pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@container (max-width: 599px) {
+  .banner {
+    padding: 12px 8px 12px 14px;
+    grid-template-columns: 28px minmax(0, 1fr) auto;
+    row-gap: 10px;
+    align-items: start;
+  }
+  .banner > .icons {
+    margin-top: -4px;
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .bannerActions {
+    margin-left: -12px;
+    grid-column: 2 / -1;
+    grid-row: 2;
+    flex-wrap: wrap;
+  }
+  .bannerSub { min-height: 36px; }
+  .bannerSub .swapItem { align-items: flex-start; }
+  .subText { white-space: normal; }
+}
+
+/* Card */
+.card {
+  display: flex;
+  width: 100%;
+  max-width: 340px;
+  padding: 16px;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  transition: background-color 200ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1)), border-color 200ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1));
+}
+.card[data-tone="warning"] {
+  border-color: color-mix(in oklab, var(--warning) 32%, var(--border));
+  background: color-mix(in oklab, var(--warning) 6%, var(--surface-raised));
+}
+.cardFloating,
+.cardFloating[data-tone="warning"] {
+  padding: 16px;
+  border: 0;
+  background: transparent;
+}
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.cardHead .icons { margin: -6px -6px 0 0; }
+.cardTitle {
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.cardMeta {
+  margin-top: 2px;
+  color: var(--text-muted);
+}
+.list {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle, var(--border));
+}
+.listLabel {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  line-height: 16px;
+}
+.rows {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.row {
+  display: flex;
+  height: 32px;
+  gap: 8px;
+  align-items: center;
+}
+.rowIcon {
+  display: grid;
+  width: 16px;
+  height: 16px;
+  flex: none;
+  place-items: center;
+  color: var(--text-secondary);
+  transition: opacity 160ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1));
+}
+.rowLabel {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rowDetail {
+  flex: none;
+  color: var(--text-muted);
+  text-align: right;
+}
+.rowState {
+  width: 14px;
+  flex: none;
+  color: var(--text-muted);
+}
+.rowState:has(span:empty) { margin-left: -22px; visibility: hidden; }
+.card[data-tone="expired"] .rowIcon { opacity: .55; }
+.card[data-tone="expired"] .rowLabel { color: var(--text-secondary); }
+.cardActions {
+  display: flex;
+  margin-top: 16px;
+  gap: 4px;
+  flex-direction: column;
+}
+
+/* Pill */
+.pill {
+  display: inline-flex;
+  max-width: 100%;
+  height: 32px;
+  padding: 0 12px 0 8px;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-raised);
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 200ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1)), border-color 200ms var(--ease-standard, cubic-bezier(.22, 1, .36, 1));
+}
+.pill:hover { background: var(--surface-muted); }
+.pill[data-tone="warning"] {
+  border-color: color-mix(in oklab, var(--warning) 36%, var(--border));
+  background: color-mix(in oklab, var(--warning) 7%, var(--surface-raised));
+}
+.pillLead {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  place-items: center;
+}
+.pillLead .swapItem { justify-content: center; }
+.pillLabel {
+  position: relative;
+  display: flex;
+  overflow-x: clip;
+}
+.pillMeasure {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+}
+
+/* Floating surfaces */
+.menu,
+.popover {
+  z-index: 60;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-floating);
+  color: var(--foreground);
+  transform-origin: var(--radix-popper-transform-origin);
+  animation: floatIn 200ms cubic-bezier(.22, 1, .36, 1);
+}
+.menu {
+  min-width: 208px;
+  padding: 4px;
+}
+.popover {
+  width: min(340px, calc(100vw - 24px));
+  font-size: 12px;
+  line-height: 18px;
+}
+.popover:focus { outline: none; }
+.menuItem {
+  display: flex;
+  min-height: 36px;
+  padding: 0 12px;
+  align-items: center;
+  border-radius: var(--radius-control);
+  font-size: 12px;
+  line-height: 1.4;
+  cursor: pointer;
+  outline: none;
+  transition: background-color 100ms cubic-bezier(.22, 1, .36, 1);
+}
+.menuItem[data-highlighted] { background: var(--surface-muted); }
+
+@keyframes floatIn {
+  from { opacity: 0; transform: translateY(-4px) scale(.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu, .popover { animation: none; }
+  .banner, .card, .pill, .ringValue, .iconButton, .rowIcon, .menuItem { transition: none; }
+}

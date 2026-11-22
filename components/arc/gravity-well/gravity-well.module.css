@@ -1,0 +1,8 @@
+.root { position: relative; display: grid; width: 100%; grid-template-columns: repeat(auto-fill,minmax(var(--gravity-well-min,56px),1fr)); touch-action: pan-y; user-select: none; -webkit-tap-highlight-color: transparent; }
+.tile { position: relative; aspect-ratio: 1 / 1; min-width: 0px; will-change: transform; }
+.tile::after { position: absolute; inset: 0px; border-radius: var(--gravity-well-radius,12px); box-shadow: 0 0 0 2px var(--accent); content: ""; opacity: var(--gravity-well-ring,0); pointer-events: none; }
+.demo { width: 100%; max-width: 600px; margin-inline: auto; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-surface); background: var(--surface); overflow: clip; }
+.demo .well { grid-template-columns: repeat(7, minmax(0px, 1fr)); cursor: crosshair; }
+@media (max-width: 520px) { .demo { padding: 14px; } }
+@media (max-width: 520px) { .demo .well { grid-template-columns: repeat(6, minmax(0px, 1fr)); gap: 6px !important; } }
+.image { display: block; width: 100%; height: 100%; border-radius: 12px; background: var(--surface-muted); object-fit: cover; pointer-events: none; }

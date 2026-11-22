@@ -1,0 +1,25 @@
+.root { --cube-body: var(--accent); --cube-ink: var(--accent-foreground); --cube-top: color-mix(in oklab,var(--cube-body),#fff 26%); --cube-front: var(--cube-body); --cube-side: color-mix(in oklab,var(--cube-body),#000 30%); --cube-line: var(--text-muted); --cube-shadow: color-mix(in oklab,var(--foreground) 9%,transparent); --cube-sparkle: var(--cube-body); position: relative; display: inline-block; flex: 0 0 auto; line-height: 0; vertical-align: middle; }
+:root[data-theme="dark"] .root { --cube-top: color-mix(in oklab,var(--cube-body),#fff 14%); --cube-front: color-mix(in oklab,var(--cube-body),#000 10%); --cube-side: color-mix(in oklab,var(--cube-body),#000 42%); --cube-shadow: color-mix(in oklab,#000 40%,transparent); }
+.svg { display: block; overflow: visible; }
+.under { fill: var(--cube-front); }
+.fill { fill: var(--cube-front); stroke: none; }
+.shadow { fill: var(--cube-shadow); }
+.eye { fill: var(--cube-ink); }
+.stroke { fill: none; stroke: var(--cube-ink); stroke-linecap: round; stroke-linejoin: round; }
+.line { fill: none; stroke: var(--cube-line); stroke-width: 2.4; stroke-linecap: round; }
+.spark { fill: var(--cube-sparkle); }
+.live { position: absolute; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.demo { display: grid; place-items: center; width: 100%; padding: 24px 16px; box-sizing: border-box; }
+.card { width: 100%; max-width: 560px; box-sizing: border-box; display: grid; gap: 4px; border: 1px solid var(--border); border-radius: var(--radius-panel,26px); background: var(--surface); padding: 8px; container-type: inline-size; }
+.stage { display: grid; place-items: center; height: 208px; }
+.inline { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 32px; padding: 0px 12px 8px; color: var(--text-secondary); font-size: 14px; line-height: 20px; }
+.caption { display: inline-grid; min-width: 0px; }
+.lineText { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sizes { display: flex; align-items: flex-end; justify-content: center; gap: 24px; border-top: 1px solid var(--border-subtle); padding: 16px 12px 12px; }
+.size { display: grid; justify-items: center; gap: 8px; }
+.sizeBox { display: grid; place-items: end center; height: 64px; }
+.sizeLabel { color: var(--text-muted); font-size: 12px; line-height: 16px; font-variant-numeric: tabular-nums; }
+.controls { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--border-subtle); padding: 8px 4px 0px; min-width: 0px; }
+.controls > :first-child { min-width: 0px; flex: 0 1 auto; }
+@container (max-width: 460px) { .playText { display: none; } }
+@container (max-width: 460px) { .sizes { gap: 16px; } }
