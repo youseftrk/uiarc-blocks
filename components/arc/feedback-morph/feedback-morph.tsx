@@ -397,7 +397,7 @@ export function FeedbackMorph({
                   <button
                     type="button"
                     className={styles.submit}
-                    disabled={!canSubmit || phase === "sending"}
+                    disabled={!canSubmit}
                     onClick={() => void handleSubmit()}
                   >
                     {phase === "sending" ? "Sending…" : "Send"}
