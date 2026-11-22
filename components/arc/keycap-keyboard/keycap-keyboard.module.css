@@ -1,0 +1,373 @@
+.root {
+  --board: oklch(97% 0 0);
+  --board-edge: oklch(0% 0 0 / 0.07);
+  --cap-top: oklch(100% 0 0);
+  --cap-bottom: oklch(96.5% 0 0);
+  --cap-edge: oklch(0% 0 0 / 0.09);
+  --face-top: oklch(96.8% 0 0);
+  --face-bottom: oklch(99.6% 0 0);
+  --housing: oklch(84% 0 0);
+  --legend: oklch(40% 0 0);
+  --legend-soft: oklch(56% 0 0);
+  --shade: oklch(0% 0 0 / 0.1);
+  --glow: color-mix(in oklab, var(--accent) 30%, transparent);
+  --tint: color-mix(in oklab, var(--accent) 12%, transparent);
+  display: grid;
+  width: 100%;
+  max-width: 760px;
+  gap: 20px;
+  margin-inline: auto;
+  container-type: inline-size;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:global(:root[data-theme="dark"]) .root {
+  --board: oklch(17.5% 0 0);
+  --board-edge: oklch(100% 0 0 / 0.07);
+  --cap-top: oklch(29% 0 0);
+  --cap-bottom: oklch(25.5% 0 0);
+  --cap-edge: oklch(100% 0 0 / 0.07);
+  --face-top: oklch(26.5% 0 0);
+  --face-bottom: oklch(29.5% 0 0);
+  --housing: oklch(11% 0 0);
+  --legend: oklch(86% 0 0);
+  --legend-soft: oklch(66% 0 0);
+  --shade: oklch(0% 0 0 / 0.4);
+  --glow: color-mix(in oklab, var(--accent) 34%, transparent);
+  --tint: color-mix(in oklab, var(--accent) 14%, transparent);
+}
+
+.output {
+  display: flex;
+  height: calc(2.6em + 4px);
+  flex-direction: column-reverse;
+  overflow-y: auto;
+  color: var(--foreground);
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 4.4cqw, 2rem);
+  letter-spacing: var(--tracking-display);
+  line-height: 1.3;
+  scrollbar-width: none;
+  cursor: text;
+  outline: none;
+}
+
+.output::-webkit-scrollbar {
+  display: none;
+}
+
+.output:focus-visible {
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.text {
+  margin: 0;
+  padding-inline: 8px;
+  text-align: center;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.char {
+  animation: arrive var(--duration-fast) var(--ease-standard) both;
+}
+
+.placeholder {
+  color: var(--text-muted);
+}
+
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.08em;
+  margin: 0 1px 0 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  vertical-align: -0.16em;
+  animation: 1.06s steps(1) 0s infinite normal none running blink;
+}
+
+.output[data-typing] .caret {
+  animation: none;
+}
+
+@keyframes arrive {
+  0% {
+    opacity: 0;
+    filter: blur(2px);
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.plate {
+  --pad: clamp(6px, 2.2cqw, 16px);
+  --u: min(
+    54px,
+    calc(
+      (100cqw - var(--pad) * 2 - 2px) /
+        (var(--units) + (var(--units) - 1) * 0.14)
+    )
+  );
+  --gap: calc(var(--u) * 0.14);
+  --travel: clamp(2px, calc(var(--u) * 0.085), 4.5px);
+  --r: calc(var(--u) * 0.2);
+  box-sizing: border-box;
+  display: grid;
+  justify-self: center;
+  justify-content: center;
+  gap: var(--gap);
+  padding: var(--pad);
+  border: 1px solid var(--board-edge);
+  border-radius: calc(var(--r) + var(--pad));
+  background: var(--board);
+  box-shadow: var(--shadow-resting);
+}
+
+.row {
+  display: flex;
+  justify-content: center;
+  gap: var(--gap);
+}
+
+.plate[data-morphing] {
+  overflow: hidden;
+}
+
+.key {
+  position: relative;
+  width: calc(var(--u) * var(--w) + var(--gap) * (var(--w) - 1));
+  height: calc(var(--u) + var(--travel));
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  outline: none;
+}
+
+.key:focus-visible .cap {
+  box-shadow:
+    inset 0 0 0 1px var(--cap-edge),
+    inset 0 calc(var(--u) * -0.07) 0 var(--shade),
+    0 0 0 2px var(--focus-ring);
+}
+
+.glow {
+  position: absolute;
+  inset: calc(var(--u) * -0.22);
+  border-radius: calc(var(--r) * 2);
+  background: radial-gradient(closest-side, var(--glow), transparent);
+  opacity: 0;
+  transition: opacity 0.7s var(--ease-standard);
+  pointer-events: none;
+}
+
+.housing {
+  position: absolute;
+  inset: var(--travel) 0 0;
+  border-radius: var(--r);
+  background: var(--housing);
+  box-shadow:
+    0 1px 2px var(--shade),
+    0 calc(var(--travel) * 0.8) calc(var(--travel) * 2) var(--shade);
+}
+
+.cap {
+  position: absolute;
+  inset: 0 0 var(--travel);
+  border-radius: var(--r);
+  background: linear-gradient(to bottom, var(--cap-top), var(--cap-bottom));
+  box-shadow:
+    inset 0 0 0 1px var(--cap-edge),
+    inset 0 calc(var(--u) * -0.07) 0 var(--shade);
+  transition: transform var(--duration-standard) cubic-bezier(0.2, 0.9, 0.3, 1);
+  will-change: transform;
+}
+
+.cap::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--tint);
+  content: "";
+  opacity: 0;
+  transition: opacity 0.6s var(--ease-standard);
+}
+
+.face {
+  position: absolute;
+  z-index: 1;
+  inset: calc(var(--u) * 0.05) calc(var(--u) * 0.09) calc(var(--u) * 0.15);
+  display: grid;
+  place-items: center;
+  border-radius: calc(var(--r) * 0.78);
+  background: linear-gradient(to bottom, var(--face-top), var(--face-bottom));
+  box-shadow:
+    inset 0 1px 1.5px var(--shade),
+    inset 0 -1px 0 oklch(100% 0 0 / 0.5);
+}
+
+:global(:root[data-theme="dark"]) .face {
+  box-shadow:
+    oklch(0 0 0 / 0.35) 0 1px 1.5px inset,
+    oklch(1 0 0 / 0.05) 0 -1px 0 inset;
+}
+
+.legend {
+  display: grid;
+  place-items: center;
+  color: var(--legend);
+  font-family: var(--font-body);
+  font-size: clamp(9px, calc(var(--u) * 0.3), 16px);
+  font-weight: 400;
+  line-height: 1;
+  transition: color 0.4s var(--ease-standard);
+}
+
+.legend svg {
+  width: clamp(10px, calc(var(--u) * 0.3), 16px);
+  height: auto;
+}
+
+.key[data-corner] .face {
+  place-items: end start;
+  padding: calc(var(--u) * 0.1) calc(var(--u) * 0.13);
+}
+
+.key[data-corner] .legend {
+  color: var(--legend-soft);
+  font-size: clamp(7px, calc(var(--u) * 0.21), 12px);
+}
+
+.key[data-pressed] .cap {
+  transform: translate3d(0, calc(var(--travel) * 0.92), 0);
+  transition: transform 35ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.key[data-latched] .cap::after,
+.key[data-pressed] .cap::after {
+  opacity: 1;
+  transition-duration: 40ms;
+}
+
+.key[data-pressed] .glow {
+  opacity: 1;
+  transition: opacity 40ms linear;
+}
+
+.key[data-latched] .legend,
+.key[data-pressed] .legend {
+  color: var(--foreground);
+  transition-duration: 40ms;
+}
+
+.key[data-latched] .cap {
+  transform: translate3d(0, calc(var(--travel) * 0.5), 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .key:hover .legend {
+    color: var(--foreground);
+  }
+}
+
+.key[data-accent] {
+  --cap-top: color-mix(in oklab, var(--accent) 86%, oklch(100% 0 0));
+  --cap-bottom: var(--accent);
+  --face-top: color-mix(in oklab, var(--accent) 92%, oklch(0% 0 0));
+  --face-bottom: color-mix(in oklab, var(--accent) 88%, oklch(100% 0 0));
+  --tint: oklch(100% 0 0 / 0.08);
+}
+
+.root .key[data-accent] .legend {
+  color: var(--accent-foreground);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cap,
+  .key[data-latched] .cap,
+  .key[data-pressed] .cap {
+    transform: none;
+    transition: none;
+  }
+  .caret,
+  .char {
+    animation: none;
+  }
+  .glow {
+    transition-duration: var(--duration-standard);
+  }
+}
+
+/* Demo styles */
+.demo {
+  display: grid;
+  width: 100%;
+  justify-items: center;
+  gap: 16px;
+}
+
+.segment {
+  position: relative;
+  display: inline-grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--surface-muted);
+}
+
+.segment::before {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 3px);
+  border-radius: var(--radius-pill);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-resting), 0 0 0 1px var(--border);
+  content: "";
+  transform: translate3d(calc(var(--index, 0) * (100% + 2px)), 0, 0);
+  transition: transform var(--duration-spring) var(--ease-spring);
+}
+
+.option {
+  position: relative;
+  height: 30px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-body);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.option[aria-pressed="true"] {
+  color: var(--foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .option:hover {
+    color: var(--foreground);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .segment::before {
+    transition: none;
+  }
+}

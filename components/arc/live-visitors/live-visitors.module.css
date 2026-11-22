@@ -1,0 +1,596 @@
+.root {
+  --lv-ease: var(--ease-standard);
+  --lv-move: var(--duration-standard);
+  container-type: inline-size;
+  position: relative;
+  width: 100%;
+  max-width: 640px;
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-body);
+  line-height: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 20px 0;
+}
+
+.headText {
+  min-width: 0;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 20px;
+  color: var(--text-secondary);
+}
+
+.dot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  transition: background-color var(--duration-fast) var(--lv-ease);
+}
+
+.dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  opacity: 0;
+}
+
+.root[data-active] .dot::after {
+  animation: lvPulse 1.6s var(--lv-ease) infinite;
+}
+
+.status[data-state="connecting"] .dot,
+.status[data-state="paused"] .dot {
+  background: var(--text-muted);
+}
+
+.status[data-state="reconnecting"] .dot {
+  background: var(--warning);
+}
+
+@keyframes lvPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  70%,
+  100% {
+    transform: scale(2.75);
+    opacity: 0;
+  }
+}
+
+.stateStack {
+  display: grid;
+}
+
+.stateLabel {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity var(--duration-instant) var(--lv-ease);
+}
+
+.stateLabel[data-on] {
+  opacity: 1;
+  transition: opacity var(--duration-fast) var(--lv-ease) 40ms;
+}
+
+.countRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+  margin: 4px 0 0;
+}
+
+.count {
+  position: relative;
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.countSkeleton,
+.count .rolling {
+  transition: opacity var(--duration-fast) var(--lv-ease);
+}
+
+.countSkeleton {
+  position: absolute;
+  top: 9px;
+  left: 0;
+  width: 58px;
+  height: 24px;
+  border-radius: 8px;
+  background: var(--surface-muted);
+  opacity: 0;
+}
+
+.count[data-pending] .rolling {
+  opacity: 0;
+}
+
+.count[data-pending] .countSkeleton {
+  opacity: 1;
+  animation: lvBreathe 1.2s ease-in-out infinite alternate;
+}
+
+.countLabel {
+  color: var(--text-secondary);
+}
+
+.headActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  margin-top: -2px;
+}
+
+.iconButton {
+  display: inline-grid;
+  place-items: center;
+  width: var(--control-height-sm);
+  height: var(--control-height-sm);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-raised);
+  color: var(--text-secondary);
+  cursor: pointer;
+  outline: none;
+  transition:
+    background-color var(--duration-fast) var(--lv-ease),
+    border-color var(--duration-fast) var(--lv-ease),
+    color var(--duration-fast) var(--lv-ease);
+}
+
+.iconButton:hover {
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+
+.iconButton:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.meta {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rolling {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.digit {
+  position: relative;
+  display: inline-block;
+}
+
+.digit[data-enter] {
+  overflow: hidden;
+  animation: lvGrow var(--duration-standard) var(--lv-ease) both;
+}
+
+.digitSizer {
+  visibility: hidden;
+}
+
+.digitWindow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.digitStrip {
+  display: flex;
+  flex-direction: column;
+  height: 1000%;
+  transition: transform var(--lv-move) var(--lv-ease);
+}
+
+.digitStrip > span {
+  flex: 1 0 10%;
+  text-align: center;
+}
+
+.rolling[data-reduced] .digitStrip {
+  transition: none;
+}
+
+@keyframes lvGrow {
+  0% {
+    max-width: 0;
+    opacity: 0;
+  }
+  100% {
+    max-width: 1em;
+    opacity: 1;
+  }
+}
+
+.map {
+  position: relative;
+  margin: 16px 20px 0;
+  aspect-ratio: 600 / 216;
+}
+
+.mapSvg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.land {
+  fill: none;
+  stroke: color-mix(in oklab, var(--text-muted) 46%, transparent);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+.pingStrong,
+.ping {
+  fill: var(--accent);
+}
+
+.pingStrong {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+.ringStrong,
+.ring {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 1.25;
+  vector-effect: non-scaling-stroke;
+  transform-box: fill-box;
+  transform-origin: center center;
+  opacity: 0;
+  animation: lvRing 0.9s var(--lv-ease) both;
+}
+
+.ringStrong {
+  stroke-width: 1.5;
+  animation: lvRingStrong 1.2s var(--lv-ease) both;
+}
+
+@keyframes lvRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes lvRingStrong {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(5.5);
+    opacity: 0;
+  }
+}
+
+.mapLabel {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.mapLabelInner {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 8px;
+  color: var(--foreground);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  white-space: nowrap;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow-raised);
+  transform: translateX(-50%);
+}
+
+.mapLabelInner[data-align="start"] {
+  transform: translateX(-12px);
+}
+
+.mapLabelInner[data-align="end"] {
+  transform: translateX(calc(-100% + 12px));
+}
+
+.lists {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 16px;
+  padding: 16px 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.panel {
+  min-width: 0;
+}
+
+.panelHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  height: 20px;
+  margin-bottom: 8px;
+  padding-inline: 10px;
+}
+
+.panelTitle {
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: var(--text-sm);
+  line-height: 20px;
+  font-weight: 500;
+}
+
+.rows {
+  position: relative;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  list-style: none;
+}
+
+.eventRow,
+.pageRow,
+.skeletonRow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 32px;
+  padding-inline: 10px;
+  border-radius: 8px;
+  transition:
+    transform var(--lv-move) var(--lv-ease),
+    opacity var(--duration-fast) var(--lv-ease);
+}
+
+.eventRow[data-out],
+.pageRow[data-out] {
+  opacity: 0;
+  transition:
+    transform var(--lv-move) var(--lv-ease),
+    opacity var(--duration-instant) var(--lv-ease);
+}
+
+.eventRow[data-enter],
+.pageRow[data-enter] {
+  animation: lvFadeIn var(--duration-fast) var(--lv-ease) both;
+}
+
+@keyframes lvFadeIn {
+  0% {
+    opacity: 0;
+  }
+}
+
+.bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: inherit;
+  background: var(--accent-subtle);
+  transition: width var(--lv-move) var(--lv-ease);
+}
+
+.path {
+  position: relative;
+  flex: 1 1 0%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.value {
+  position: relative;
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.flag {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  width: 16px;
+  height: 12px;
+  overflow: hidden;
+  border-radius: 2px;
+}
+
+.flag > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.flag::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--foreground) 14%, transparent);
+}
+
+.flag[data-flag="none"] {
+  background: var(--surface-muted);
+}
+
+.eventText {
+  display: flex;
+  flex: 1 1 0%;
+  gap: 6px;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.eventLabel {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.eventPlace {
+  flex: 0 1000 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-muted);
+  text-overflow: ellipsis;
+}
+
+.time {
+  flex: 0 0 auto;
+  min-width: 28px;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding-inline: 10px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.skeletonFlag {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--surface-muted);
+}
+
+.skeletonLine {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--surface-muted);
+  animation: lvBreathe 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes lvBreathe {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.55;
+  }
+}
+
+@container (max-width: 520px) {
+  .head {
+    padding: 16px 16px 0;
+  }
+  .map {
+    margin: 12px 16px 0;
+  }
+  .lists {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 12px;
+    padding: 12px 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ringStrong,
+  .ring,
+  .root[data-active] .dot::after {
+    animation: none;
+    opacity: 0;
+  }
+  .bar,
+  .digitStrip,
+  .eventRow,
+  .pageRow,
+  .skeletonRow {
+    transition: none;
+  }
+  .count[data-pending] .countSkeleton,
+  .digit[data-enter],
+  .eventRow[data-enter],
+  .pageRow[data-enter],
+  .skeletonLine {
+    animation: none;
+  }
+}
+
+.demo {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}

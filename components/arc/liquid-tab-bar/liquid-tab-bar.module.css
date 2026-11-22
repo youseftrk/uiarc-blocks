@@ -1,0 +1,255 @@
+.bar {
+  --liquid-track: var(--surface-muted);
+  --liquid-lens: var(--foreground);
+  --liquid-on-lens: var(--background);
+  --liquid-pad: 4px;
+  --liquid-gap: 2px;
+  --liquid-height: 40px;
+  --liquid-slot: 44px;
+  position: relative;
+  display: block;
+  max-width: 100%;
+  height: calc(var(--liquid-height) + var(--liquid-pad) * 2);
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--liquid-track);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: var(--tracking-body);
+  line-height: 1;
+  isolation: isolate;
+  touch-action: pan-y;
+  user-select: none;
+  transition: width var(--duration-spring) var(--ease-spring);
+}
+
+.bar[data-held] {
+  cursor: grabbing;
+}
+
+.row {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--liquid-gap);
+  padding: var(--liquid-pad);
+}
+
+.tab {
+  position: relative;
+  display: flex;
+  height: var(--liquid-height);
+  min-width: var(--liquid-slot);
+  flex: 0 0 auto;
+  align-items: center;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    width var(--duration-spring) var(--ease-spring);
+}
+
+.tab:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-ring);
+}
+
+.tab[data-selected] {
+  cursor: grab;
+}
+
+.bar[data-held] .tab {
+  cursor: grabbing;
+}
+
+.icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  display: grid;
+  width: 20px;
+  height: 20px;
+  margin-top: -10px;
+  place-items: center;
+}
+
+.icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.filled {
+  display: contents;
+}
+
+.filled svg {
+  fill: currentColor;
+}
+
+.label {
+  position: absolute;
+  top: 50%;
+  left: 40px;
+  margin-top: -0.5em;
+  line-height: 1;
+  white-space: nowrap;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.tab[data-badged] .label {
+  left: 46px;
+}
+
+.lens {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-pill);
+  background: var(--liquid-lens);
+  color: var(--liquid-on-lens);
+  pointer-events: none;
+  will-change: clip-path;
+}
+
+.lens .tab {
+  cursor: inherit;
+}
+
+.badgeAnchor {
+  position: absolute;
+  top: 5px;
+  left: 25px;
+  display: flex;
+  pointer-events: none;
+}
+
+.badge {
+  display: inline-flex;
+  height: 16px;
+  min-width: 16px;
+  justify-content: center;
+  overflow: hidden;
+  padding: 0 5px;
+  border-radius: var(--radius-pill);
+  background: var(--foreground);
+  box-shadow: 0 0 0 2px var(--liquid-track);
+  color: var(--background);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  line-height: 16px;
+}
+
+.badge[data-inverted] {
+  background: var(--background);
+  box-shadow: 0 0 0 2px var(--liquid-lens);
+  color: var(--foreground);
+}
+
+.digit {
+  display: inline-block;
+  width: 7px;
+  height: 16px;
+  overflow: hidden;
+  text-align: center;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--duration-spring) var(--ease-spring);
+}
+
+.column span {
+  display: block;
+  height: 16px;
+}
+
+.measure {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.measure .label {
+  position: static;
+  margin: 0;
+}
+
+.measure .label[data-badged] {
+  padding-left: 6px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .row > .tab:not([data-selected]):hover {
+    color: var(--foreground);
+  }
+}
+
+@media (prefers-contrast: more) {
+  .bar {
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar,
+  .tab,
+  .label,
+  .column {
+    transition: none;
+  }
+}
+
+/* Demo */
+.demo {
+  display: grid;
+  width: min(100%, 560px);
+  margin-inline: auto;
+  justify-items: center;
+  gap: var(--space-4);
+  font-family: var(--font-body);
+  letter-spacing: var(--tracking-body);
+  container-type: inline-size;
+}
+
+.stage {
+  display: grid;
+  width: 100%;
+  min-height: 200px;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-4);
+}
+
+.noteRow {
+  display: grid;
+  min-height: 1.4em;
+  place-items: center;
+}
+
+.note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: var(--leading-body);
+}
+
+.modes {
+  display: flex;
+  justify-content: center;
+}
