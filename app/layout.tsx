@@ -8,9 +8,9 @@ const geist = Geist({ variable: "--font-geist", subsets: ["latin"] });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "UIarc Blocks",
+  title: "UIarc Component Replica — 252 Components",
   description:
-    "Agent Run, Wallet Card, Invite People and AI Chat blocks from uiarc.dev",
+    "All 252 UIArc components (121 free MIT + 131 Pro) and blocks recreated from uiarc.dev",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

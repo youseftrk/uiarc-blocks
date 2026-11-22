@@ -1,0 +1,164 @@
+.page {
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+.wrap {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--foreground);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.search {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 13px;
+  width: 210px;
+  outline: none;
+}
+
+.search:focus {
+  border-color: var(--foreground);
+}
+
+.tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.tab {
+  height: 26px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.navBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.navBtn:hover {
+  border-color: var(--border-strong, var(--foreground));
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+  text-decoration: none;
+  font-size: 13px;
+  line-height: 1.4;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+
+.card:hover {
+  border-color: var(--border-strong, var(--foreground));
+  background: var(--surface-raised, var(--surface));
+}
+
+.slug {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tierPro {
+  flex-shrink: 0;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.tierFree {
+  flex-shrink: 0;
+  color: #15803d;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+:global([data-theme="dark"]) .tierPro {
+  color: #f59e0b;
+}
+
+:global([data-theme="dark"]) .tierFree {
+  color: #4ade80;
+}
+
+.empty {
+  margin-top: 24px;
+  padding: 32px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted-foreground);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
