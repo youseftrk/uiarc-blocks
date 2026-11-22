@@ -1,0 +1,777 @@
+.root {
+  container-type: inline-size;
+  width: 100%;
+  min-width: 0;
+}
+
+.card {
+  --moe-first: var(--series-1);
+  --moe-second: var(--series-2);
+  --moe-line: var(--border);
+  --moe-flow: var(--border-strong);
+  --moe-ink: var(--foreground);
+  display: grid;
+  min-width: 0;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface);
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-theme="dark"] .card {
+  --moe-line: color-mix(in oklab, var(--border-strong) 70%, var(--border));
+  --moe-flow: color-mix(in oklab, var(--text-muted) 55%, var(--border-strong));
+}
+
+@container (width < 480px) {
+  .card {
+    gap: var(--space-4);
+    padding: var(--space-4);
+    border-radius: var(--radius-panel);
+  }
+}
+
+.card [data-rank="0"] {
+  --rank: var(--moe-first);
+}
+
+.card [data-rank="1"] {
+  --rank: var(--moe-second);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  min-width: 0;
+}
+
+.params {
+  display: inline-flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.paramsLabel {
+  color: var(--text-secondary);
+}
+
+.paramsValue {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--foreground);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.play {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .play:hover:not(:disabled) {
+    border-color: var(--border-strong);
+    color: var(--foreground);
+  }
+}
+
+.play:active:not(:disabled) {
+  background: var(--surface-muted);
+}
+
+.play:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .play:active:not(:disabled) {
+    transform: scale(0.96);
+  }
+}
+
+.playIcon {
+  display: grid;
+  place-items: center;
+}
+
+@container (width < 480px) {
+  .play {
+    order: 1;
+  }
+  .params {
+    order: 2;
+    flex-basis: 100%;
+  }
+}
+
+/* Stage */
+.stage {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.lines,
+.packets {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.packets {
+  z-index: 3;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+}
+
+.card[data-inspect] .packets {
+  opacity: 0;
+}
+
+.stageLabel {
+  position: absolute;
+  z-index: 1;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  line-height: 1;
+  white-space: nowrap;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.stageLabel[data-align="center"] {
+  transform: translate(-50%, -50%);
+}
+
+.stageLabel[data-align="end"] {
+  transform: translate(-100%, -50%);
+}
+
+.curve,
+.flow,
+.gate {
+  fill: none;
+  stroke-width: 1;
+  stroke-linecap: round;
+  transition:
+    stroke var(--duration-standard) var(--ease-standard),
+    stroke-width var(--duration-standard) var(--ease-standard);
+}
+
+.flow {
+  stroke: var(--moe-flow);
+}
+
+.flow[data-on] {
+  stroke: color-mix(in oklab, var(--moe-ink) 45%, var(--moe-flow));
+}
+
+.curve,
+.gate {
+  stroke: var(--moe-line);
+}
+
+.curve[data-rank],
+.gate[data-rank] {
+  stroke: color-mix(in oklab, var(--rank) 70%, transparent);
+  stroke-width: 1.5;
+}
+
+.gate[data-dropped] {
+  stroke: color-mix(in oklab, var(--warning) 70%, transparent);
+  stroke-dasharray: 3, 3;
+}
+
+.joint {
+  fill: var(--surface);
+  stroke: var(--moe-flow);
+  stroke-width: 1;
+}
+
+.dot {
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+.router {
+  position: absolute;
+  z-index: 1;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-muted);
+  transition: border-color var(--duration-standard) var(--ease-standard);
+}
+
+.router[data-live] {
+  border-color: color-mix(in oklab, var(--border-strong) 60%, var(--border));
+}
+
+[data-theme="dark"] .router {
+  background: color-mix(in oklab, var(--surface-muted) 70%, var(--surface));
+}
+
+.track {
+  position: absolute;
+  z-index: 1;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--foreground) 7%, transparent);
+}
+
+.fill {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--text-muted) 55%, transparent);
+  transform: scaleX(var(--s, 0));
+  transform-origin: 0 50%;
+  transition:
+    transform var(--duration-standard) var(--ease-standard),
+    background-color var(--duration-standard) var(--ease-standard);
+}
+
+.stage[data-layout="narrow"] .fill {
+  transform: scaleY(var(--s, 0));
+  transform-origin: 50% 100%;
+}
+
+.track[data-rank] .fill {
+  background: var(--rank);
+}
+
+.score {
+  position: absolute;
+  z-index: 1;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+  text-align: right;
+  white-space: nowrap;
+  transition: color var(--duration-standard) var(--ease-standard);
+}
+
+.stage[data-layout="narrow"] .score {
+  text-align: center;
+}
+
+.score[data-rank] {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.tiles {
+  display: contents;
+}
+
+.tile {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--foreground);
+  font: inherit;
+  font-size: var(--text-sm);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-considered) var(--ease-standard),
+    background-color var(--duration-considered) var(--ease-standard),
+    color var(--duration-standard) var(--ease-standard);
+}
+
+.tile:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.gauge {
+  position: absolute;
+  inset: auto 0 0;
+  height: 2px;
+  background: color-mix(in oklab, var(--text-muted) 28%, transparent);
+  transform: scaleX(var(--g, 0));
+  transform-origin: 0 50%;
+  transition:
+    transform var(--duration-considered) var(--ease-standard),
+    background-color var(--duration-standard) var(--ease-standard);
+  pointer-events: none;
+}
+
+.tile[data-full] .gauge {
+  background: color-mix(in oklab, var(--text-secondary) 55%, transparent);
+}
+
+.tile[data-rank] .gauge {
+  background: color-mix(in oklab, var(--rank) 70%, transparent);
+}
+
+.tileIcon {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  transition: color var(--duration-standard) var(--ease-standard);
+}
+
+.tileIcon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.tileName {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tileCount {
+  position: relative;
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.tile[data-inspect],
+.tile[data-pinned] {
+  border-color: var(--border-strong);
+  background: var(--surface-muted);
+}
+
+.tile[data-rank] {
+  border-color: color-mix(in oklab, var(--rank) 55%, var(--border));
+  background: color-mix(in oklab, var(--rank) 9%, var(--surface));
+  transition-duration: var(--duration-fast);
+}
+
+.tile[data-rank] .tileIcon {
+  color: var(--rank);
+}
+
+.tile[data-rank] .tileCount {
+  color: var(--foreground);
+}
+
+.tile[data-dropped] {
+  border-color: color-mix(in oklab, var(--warning) 55%, var(--border));
+  border-style: dashed;
+  transition-duration: var(--duration-fast);
+}
+
+.tile[data-dropped] .tileIcon {
+  color: var(--warning);
+}
+
+.stage[data-layout="narrow"] .tile {
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  border-radius: 9px;
+}
+
+.stage[data-layout="narrow"] .tileName {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.slot {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+.stage[data-layout="wide"] .slot[data-side="in"] {
+  justify-items: end;
+}
+
+.stage[data-layout="wide"] .slot[data-side="out"] {
+  justify-items: start;
+}
+
+.chip {
+  display: inline-flex;
+  box-sizing: border-box;
+  max-width: 100%;
+  height: 28px;
+  grid-area: 1 / 1;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  padding: 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--foreground);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: pre;
+  transition:
+    color var(--duration-standard) var(--ease-standard),
+    border-color var(--duration-standard) var(--ease-standard);
+}
+
+.chip[data-spent] {
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.chip[data-empty] {
+  border-style: dashed;
+  border-color: var(--border-strong);
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.chipDots {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 2px;
+}
+
+.chipDots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--rank);
+}
+
+/* Sequence */
+.sequence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.token {
+  position: relative;
+  display: inline-flex;
+  box-sizing: border-box;
+  height: 28px;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: var(--text-sm);
+  white-space: pre;
+  cursor: pointer;
+  transition:
+    color var(--duration-standard) var(--ease-standard),
+    background-color var(--duration-standard) var(--ease-standard),
+    border-color var(--duration-standard) var(--ease-standard),
+    opacity var(--duration-standard) var(--ease-standard);
+}
+
+.token:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.token[data-state="done"] {
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+
+.token[data-state="current"] {
+  border-color: color-mix(in oklab, var(--foreground) 40%, var(--border-strong));
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .token:hover {
+    border-color: var(--border-strong);
+    color: var(--foreground);
+  }
+}
+
+.token[aria-pressed="true"],
+.token[data-inspect] {
+  border-color: var(--moe-ink);
+  background: var(--surface);
+  color: var(--foreground);
+}
+
+.token[data-rank] {
+  border-color: color-mix(in oklab, var(--rank) 55%, transparent);
+  background: color-mix(in oklab, var(--rank) 12%, var(--surface));
+  color: var(--foreground);
+}
+
+.token[data-dropped] {
+  border-color: color-mix(in oklab, var(--warning) 60%, transparent);
+  border-style: dashed;
+  color: var(--foreground);
+}
+
+.token[data-fade] {
+  opacity: 0.45;
+}
+
+/* Footer */
+.footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  align-items: start;
+  gap: var(--space-4) var(--space-8);
+  min-width: 0;
+}
+
+@container (width < 640px) {
+  .footer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.inspector {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.line {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 28px;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lineChip {
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 24px;
+  align-items: center;
+  padding: 0 8px;
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  font-weight: 500;
+  white-space: pre;
+}
+
+.lineArrow {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
+
+@container (width < 480px) {
+  .lineArrow,
+  .lineChip {
+    display: none;
+  }
+}
+
+.pick {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 6px;
+}
+
+.pick + .pick {
+  margin-left: 4px;
+}
+
+.swatch {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rank);
+}
+
+.pickName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pickValue {
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.pick[data-dropped] .pickName {
+  color: var(--text-secondary);
+}
+
+.pick[data-dropped] .pickValue {
+  color: var(--text-muted);
+}
+
+.warnIcon {
+  flex: 0 0 auto;
+  color: var(--warning);
+}
+
+.note {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.tokenRef {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--surface-muted);
+  color: var(--foreground);
+  white-space: pre;
+}
+
+.load {
+  display: grid;
+  min-width: 0;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.loadHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--text-secondary);
+}
+
+.loadValue {
+  display: inline-flex;
+  align-items: baseline;
+  color: var(--foreground);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.loadBar {
+  display: flex;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--foreground) 6%, transparent);
+}
+
+.seg {
+  flex: 0 1 0;
+  min-width: 0;
+  background: color-mix(in oklab, var(--text-muted) 42%, transparent);
+  background-clip: padding-box;
+  border-left: 2px solid var(--surface);
+  transition:
+    flex-grow var(--duration-considered) var(--ease-standard),
+    background-color var(--duration-standard) var(--ease-standard),
+    border-left-width var(--duration-considered) var(--ease-standard);
+}
+
+.seg:first-child,
+.seg[data-zero] {
+  border-left-width: 0;
+}
+
+.seg[data-rank] {
+  background: var(--rank);
+}
+
+.seg[data-inspect] {
+  background: var(--text-secondary);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.demo {
+  display: grid;
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chip,
+  .curve,
+  .fill,
+  .flow,
+  .gate,
+  .gauge,
+  .packets,
+  .play,
+  .router,
+  .score,
+  .seg,
+  .tileIcon,
+  .tile,
+  .token {
+    transition-duration: 0s;
+  }
+}
