@@ -1,0 +1,144 @@
+.root {
+  --pm-ink: light-dark(
+    color-mix(in oklab, var(--foreground) 92%, var(--background)),
+    color-mix(in oklab, var(--foreground) 76%, var(--background))
+  );
+  --pm-body: light-dark(
+    var(--surface-raised),
+    color-mix(in oklab, var(--foreground) 12%, var(--surface-raised))
+  );
+  --pm-shade: light-dark(
+    color-mix(in oklab, var(--foreground) 9%, var(--surface-raised)),
+    color-mix(in oklab, var(--background) 50%, var(--pm-body))
+  );
+  --pm-screen: var(--accent);
+  --pm-eye: var(--accent-foreground, var(--background));
+  --pm-dim: color-mix(in oklab, var(--accent) 30%, var(--pm-body));
+  --pm-cheek: color-mix(in oklab, var(--accent) 32%, var(--pm-body));
+  --pm-error-screen: color-mix(in oklab, var(--danger) 16%, var(--pm-body));
+  --pm-shadow: light-dark(
+    color-mix(in oklab, var(--foreground) 12%, transparent),
+    color-mix(in oklab, var(--foreground) 10%, transparent)
+  );
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  line-height: 0;
+}
+
+.svg {
+  display: block;
+  overflow: hidden;
+}
+
+.ink {
+  fill: var(--pm-ink);
+}
+
+.body {
+  fill: var(--pm-body);
+}
+
+.shade {
+  fill: var(--pm-shade);
+}
+
+.screen {
+  fill: var(--pm-screen);
+}
+
+.eye {
+  fill: var(--pm-eye);
+}
+
+.cross {
+  fill: var(--danger);
+}
+
+.cheek {
+  fill: var(--pm-cheek);
+}
+
+.accent,
+.tip {
+  fill: var(--accent);
+}
+
+.shadow {
+  fill: var(--pm-shadow);
+}
+
+.svg[data-screen="error"] .screen {
+  fill: var(--pm-error-screen);
+}
+
+.svg[data-antenna="off"] .tip {
+  fill: var(--pm-dim);
+}
+
+.live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Demo layout */
+.demo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  min-width: 0;
+  padding: 24px 16px;
+}
+
+.stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.caption {
+  display: grid;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm, 14px);
+  line-height: 20px;
+  text-align: center;
+}
+
+.captionText {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.sizes {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 24px;
+  width: min(100%, 360px);
+  padding-top: 24px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.size {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.size figcaption {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 16px;
+  font-variant-numeric: tabular-nums;
+}
