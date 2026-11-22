@@ -1,0 +1,815 @@
+.root {
+  --cols: 16px minmax(0, 1fr) 104px 64px minmax(120px, 176px) 52px 16px;
+  --ok: color-mix(in oklab, var(--success) 82%, var(--surface));
+  container-type: inline-size;
+  position: relative;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 760px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 20px;
+  letter-spacing: var(--tracking-body);
+}
+
+.latency,
+.num,
+.pct,
+.tipPct {
+  font-variant-numeric: tabular-nums;
+}
+
+.num {
+  display: inline-grid;
+  justify-items: end;
+}
+
+.num > * {
+  grid-area: 1 / 1;
+}
+
+.numGhost {
+  visibility: hidden;
+}
+
+.header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title refresh"
+    "summary refresh";
+  gap: 2px 12px;
+  align-items: center;
+  padding: 12px;
+}
+
+.heading {
+  display: contents;
+}
+
+.title {
+  grid-area: title;
+  min-width: 0;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 20px;
+  letter-spacing: inherit;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary {
+  grid-area: summary;
+  display: grid;
+  min-width: 0;
+  height: 20px;
+}
+
+.summaryItem {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: calc(var(--text-sm) - 1px);
+  line-height: 20px;
+  color: var(--text-secondary);
+}
+
+.summaryIcon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+.summaryText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summaryItem[data-tone="operational"] .summaryIcon {
+  color: var(--success);
+}
+
+.summaryItem[data-tone="degraded"] .summaryIcon {
+  color: var(--warning);
+}
+
+.summaryItem:is([data-tone="outage"], [data-tone="error"]) .summaryIcon {
+  color: var(--danger);
+}
+
+.refresh {
+  grid-area: refresh;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: -6px -6px -6px 0;
+}
+
+.countdown {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.countdownText {
+  display: inline-flex;
+  justify-content: flex-end;
+}
+
+.countdownLabel {
+  white-space: nowrap;
+}
+
+.ring {
+  order: 2;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  overflow: visible;
+  transform: rotate(-90deg);
+}
+
+.ring circle {
+  fill: none;
+  stroke-width: 1.75;
+}
+
+.ringTrack {
+  stroke: var(--border);
+}
+
+.ringFill {
+  stroke: var(--text-secondary);
+  stroke-linecap: round;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation-name: drain;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+  transition: stroke var(--duration-fast) var(--ease-standard);
+}
+
+.ring[data-phase="error"] .ringFill {
+  stroke: var(--danger);
+}
+
+.ringSpin {
+  stroke: var(--text-secondary);
+  stroke-linecap: round;
+  stroke-dasharray: 26, 74;
+  transform-origin: 8px 8px;
+  transform-box: view-box;
+  animation: spin 0.8s linear infinite;
+}
+
+.refreshButton {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-instant) var(--ease-standard);
+}
+
+.refreshButton svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .refreshButton:hover {
+    background: var(--surface-muted);
+    color: var(--foreground);
+  }
+}
+
+.refreshButton:active {
+  transform: scale(0.94);
+  background: var(--surface-muted);
+}
+
+.refreshButton:disabled {
+  cursor: default;
+  opacity: 0.45;
+  transform: none;
+  background: none;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: var(--cols);
+  grid-template-areas: "mark name status p50 bar pct chev";
+  column-gap: 12px;
+  align-items: end;
+  height: 20px;
+  padding: 0 12px 4px;
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--text-muted);
+}
+
+.colName {
+  grid-column: mark-start / name-end;
+}
+
+.colStatus {
+  grid-area: status;
+}
+
+.colLatency {
+  grid-area: p50;
+  justify-self: end;
+}
+
+.colBar {
+  grid-column: bar-start / pct-end;
+}
+
+.list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--radius-control);
+  transition: background-color var(--duration-fast) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .item[data-interactive]:hover {
+    background: color-mix(in oklab, var(--surface-muted) 55%, var(--surface));
+  }
+}
+
+.item[data-open] {
+  background: color-mix(in oklab, var(--surface-muted) 70%, var(--surface));
+}
+
+.line {
+  position: relative;
+  display: grid;
+  grid-template-columns: var(--cols);
+  grid-template-areas: "mark name status p50 bar pct chev";
+  align-items: center;
+  column-gap: 12px;
+  min-height: 56px;
+  padding: 0 12px;
+  box-sizing: border-box;
+}
+
+.hit {
+  --focus-outline-offset: -2px;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mark {
+  grid-area: mark;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  color: var(--foreground);
+}
+
+.mark > svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+.name {
+  grid-area: name;
+  display: grid;
+  min-width: 0;
+}
+
+.nameText {
+  overflow: hidden;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta {
+  display: flex;
+  min-width: 0;
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--text-muted);
+}
+
+.detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  grid-area: status;
+  display: grid;
+  min-width: 0;
+}
+
+.health {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: calc(var(--text-sm) - 1px);
+  line-height: 20px;
+  white-space: nowrap;
+  color: var(--foreground);
+}
+
+.healthIcon {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+}
+
+.health[data-health="operational"] {
+  color: var(--text-secondary);
+}
+
+.health[data-health="operational"] .healthIcon {
+  color: var(--success);
+}
+
+.health[data-health="degraded"] .healthIcon {
+  color: var(--warning);
+}
+
+.health[data-health="outage"] .healthIcon {
+  color: var(--danger);
+}
+
+.latency {
+  grid-area: p50;
+}
+
+.latency,
+.pct {
+  justify-self: end;
+  font-size: calc(var(--text-sm) - 1px);
+  color: var(--text-secondary);
+}
+
+.pct {
+  grid-area: pct;
+}
+
+.swap {
+  display: inline-grid;
+  justify-items: end;
+}
+
+.status .swap {
+  justify-items: start;
+}
+
+.swapItem,
+.swap > .health {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.chev {
+  grid-area: chev;
+  display: grid;
+  width: 16px;
+  height: 16px;
+  place-items: center;
+  color: var(--text-muted);
+}
+
+.chev > svg {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--duration-standard) var(--ease-standard);
+}
+
+.item[data-open] .chev > svg {
+  transform: rotate(180deg);
+}
+
+.bar {
+  --focus-outline-offset: 3px;
+  grid-area: bar;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  gap: 2px;
+  height: 24px;
+  border-radius: 4px;
+  touch-action: pan-y;
+  cursor: default;
+}
+
+.tick {
+  flex: 1 1 0;
+  min-width: 2px;
+  border-radius: 2px;
+  background: var(--border);
+  transition:
+    background-color var(--duration-standard) var(--ease-standard),
+    opacity var(--duration-instant) var(--ease-standard);
+}
+
+.tick[data-health="operational"] {
+  background: var(--ok);
+}
+
+.tick[data-health="degraded"] {
+  background: var(--warning);
+}
+
+.tick[data-health="outage"] {
+  background: var(--danger);
+}
+
+.bar[data-scrub] .tick:not([data-active]) {
+  opacity: 0.42;
+}
+
+.panel {
+  overflow: hidden;
+}
+
+.panelInner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head link"
+    "updates updates";
+  column-gap: 12px;
+  padding: 0 12px 16px 40px;
+}
+
+.panelHead {
+  grid-area: head;
+  display: flex;
+  min-width: 0;
+  padding-top: 2px;
+  margin-bottom: 12px;
+}
+
+.panelTitleWrap {
+  display: grid;
+  min-width: 0;
+}
+
+.panelTitle {
+  font-weight: 500;
+  line-height: 20px;
+}
+
+.panelMeta {
+  justify-items: start;
+  font-size: var(--text-xs);
+  line-height: 16px;
+  color: var(--text-muted);
+}
+
+.panelLink {
+  grid-area: link;
+  align-self: start;
+  margin: -4px -4px 0 0;
+}
+
+.panelLink svg {
+  width: 14px;
+  height: 14px;
+}
+
+.updates {
+  grid-area: updates;
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.update {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  padding: 0 0 12px 20px;
+}
+
+.update:last-child {
+  padding-bottom: 0;
+}
+
+.update:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  top: 15px;
+  bottom: 1px;
+  left: 3px;
+  width: 1px;
+  background: var(--border);
+}
+
+.updateDot {
+  position: absolute;
+  top: 7px;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background-color var(--duration-standard) var(--ease-standard);
+}
+
+.update[data-latest] .updateDot {
+  background: var(--foreground);
+}
+
+.update[data-latest][data-stage="resolved"] .updateDot {
+  background: var(--success);
+}
+
+.updateHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  line-height: 20px;
+}
+
+.updateStage {
+  font-size: calc(var(--text-sm) - 1px);
+  font-weight: 500;
+}
+
+.updateTime {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.updateText {
+  font-size: calc(var(--text-sm) - 1px);
+  line-height: 20px;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 40;
+  display: grid;
+  gap: 4px;
+  box-sizing: border-box;
+  min-width: 184px;
+  max-width: 248px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow-floating);
+  font-size: var(--text-xs);
+  line-height: 16px;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--duration-instant) var(--ease-standard),
+    visibility 0s linear var(--duration-instant);
+}
+
+.tip[data-open] {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--duration-instant) var(--ease-standard),
+    visibility 0s;
+}
+
+.tipHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tipDate {
+  font-weight: 500;
+}
+
+.tipPct {
+  color: var(--text-secondary);
+}
+
+.tipBody {
+  display: grid;
+  gap: 2px;
+}
+
+.tip .health {
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+
+.footnote,
+.tipNote {
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.footnote {
+  margin: 0;
+  padding: 8px 12px;
+  font-size: var(--text-xs);
+  line-height: 16px;
+}
+
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 40px 16px 44px;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-weight: 500;
+}
+
+.emptyText {
+  max-width: 32ch;
+  font-size: calc(var(--text-sm) - 1px);
+  color: var(--text-secondary);
+}
+
+.item[data-skeleton] .name {
+  gap: 6px;
+}
+
+.bone {
+  display: block;
+  height: 10px;
+  border-radius: 5px;
+  background: var(--surface-muted);
+  animation: pulse 1.4s var(--ease-in-out) infinite;
+}
+
+.mark.bone {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+
+.latency .bone,
+.pct .bone,
+.status .bone {
+  justify-self: inherit;
+}
+
+.barBone {
+  animation: pulse 1.4s var(--ease-in-out) infinite;
+}
+
+.barBone .tick {
+  background: var(--surface-muted);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@container (max-width: 560px) {
+  .header {
+    grid-template-areas:
+      "title refresh"
+      "summary summary";
+  }
+
+  .columns,
+  .meta {
+    display: none;
+  }
+
+  .line {
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "mark name chev"
+      ". status p50"
+      ". bar pct";
+    row-gap: 2px;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  .chev,
+  .latency,
+  .pct {
+    justify-self: end;
+  }
+
+  .bar,
+  .pct {
+    margin-top: 8px;
+  }
+
+  .bar {
+    height: 20px;
+  }
+
+  .panelInner {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "head"
+      "updates"
+      "link";
+  }
+
+  .panelLink {
+    justify-self: start;
+    margin: 8px 0 -6px -12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barBone,
+  .bone,
+  .ringSpin {
+    animation: none;
+  }
+
+  .chev > svg,
+  .item,
+  .tick {
+    transition: none;
+  }
+}
+
+@keyframes drain {
+  100% {
+    stroke-dashoffset: 100;
+  }
+}
+
+@keyframes spin {
+  100% {
+    transform: rotate(1turn);
+  }
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+.demo {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
