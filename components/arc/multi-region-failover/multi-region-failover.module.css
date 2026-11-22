@@ -1,0 +1,705 @@
+.root {
+  --mrf-accent: var(--accent);
+  --mrf-top: var(--surface-raised);
+  --mrf-left: color-mix(in oklab, var(--surface-muted) 80%, var(--surface-raised));
+  --mrf-right: color-mix(in oklab, var(--surface-muted) 70%, var(--border));
+  --mrf-edge: color-mix(in oklab, var(--border-strong) 88%, var(--surface-raised));
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  display: grid;
+  width: 100%;
+  max-width: 1080px;
+  min-width: 0;
+  margin: 0 auto;
+  gap: var(--space-4, 16px);
+  container-type: inline-size;
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1000 / 600;
+}
+
+.root:not([data-ready]) .stage > :is(.svg, .label) {
+  opacity: 0;
+}
+
+.stage > :is(.svg, .label) {
+  transition: opacity var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.svg {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.svg :is(path, polygon, circle, ellipse) {
+  vector-effect: non-scaling-stroke;
+}
+
+.floor {
+  fill: none;
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  transition: opacity var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.root[data-layout="stack"] .floor {
+  opacity: 0.5;
+}
+
+.shadow {
+  fill: var(--foreground);
+  fill-opacity: 0.14;
+}
+
+.node {
+  transition: opacity var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.faceTop {
+  fill: var(--mrf-top);
+  stroke: var(--mrf-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+  transition: fill var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.faceLeft {
+  fill: var(--mrf-left);
+  stroke: var(--mrf-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.faceRight {
+  fill: var(--mrf-right);
+  stroke: var(--mrf-edge);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.hit {
+  fill: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.deviceBase {
+  fill: var(--surface-muted);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.device {
+  fill: var(--mrf-accent);
+}
+
+.dialTrack {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 3;
+}
+
+.dialA {
+  fill: none;
+  stroke: var(--mrf-accent);
+  stroke-width: 3;
+  stroke-linecap: butt;
+}
+
+.dialB {
+  fill: none;
+  stroke: color-mix(in oklab, var(--mrf-accent) 42%, var(--surface));
+  stroke-width: 3;
+  stroke-linecap: butt;
+}
+
+.cube {
+  --hit: 0;
+  --load: 0;
+}
+
+.cube .faceTop {
+  fill: color-mix(
+    in oklab,
+    var(--mrf-accent) calc(var(--hit) * 55% + var(--load) * 16%),
+    var(--mrf-top)
+  );
+}
+
+.cube :is(.faceLeft, .faceRight) {
+  transition:
+    fill var(--duration-standard, 0.2s) var(--ease-standard, ease),
+    stroke var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.cube[data-state="down"] .faceTop {
+  fill: color-mix(in oklab, var(--danger) 16%, var(--mrf-top));
+  stroke: color-mix(in oklab, var(--danger) 55%, var(--mrf-edge));
+}
+
+.cube[data-state="down"] :is(.faceLeft, .faceRight) {
+  fill: color-mix(in oklab, var(--danger) 10%, var(--mrf-left));
+  stroke: color-mix(in oklab, var(--danger) 48%, var(--mrf-edge));
+}
+
+.route,
+.traffic {
+  transition: opacity var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.route[data-dim] {
+  opacity: 0.3;
+}
+
+.traffic[data-dim] {
+  opacity: 0.75;
+}
+
+.edge {
+  --lit: 0;
+  --err: 0;
+  fill: none;
+  stroke: color-mix(
+    in oklab,
+    var(--danger) calc(var(--err) * 70%),
+    color-mix(in oklab, var(--mrf-accent) calc(var(--lit) * 50%), var(--border-strong))
+  );
+  stroke-width: 1;
+}
+
+.route[data-on] .edge {
+  stroke-width: 1.5;
+}
+
+.packet {
+  fill: var(--mrf-accent);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+.packet[data-kind="error"] {
+  fill: var(--danger);
+}
+
+.probe {
+  fill: var(--surface);
+  stroke: var(--text-secondary);
+  stroke-width: 1.5;
+}
+
+.probe[data-result="pass"] {
+  stroke: var(--success);
+}
+
+.probe[data-result="fail"] {
+  stroke: var(--danger);
+}
+
+.label {
+  position: absolute;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  width: max-content;
+  min-width: 0;
+  max-width: 12rem;
+  transform: translateX(-50%);
+  text-align: center;
+  cursor: default;
+}
+
+.label[data-above] {
+  transform: translate(-50%, -100%);
+}
+
+.name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  font-size: var(--text-sm, 14px);
+  font-weight: 500;
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body, 1.5);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mark {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 14px;
+  height: 14px;
+  color: var(--text-secondary);
+  object-fit: contain;
+}
+
+.mark > svg {
+  width: 14px;
+  height: 14px;
+  stroke-width: 1.75;
+}
+
+.meta {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-muted);
+  font-family: var(--mono);
+  font-size: var(--text-xs, 12px);
+  letter-spacing: 0;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.metric {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metric,
+.status {
+  max-width: 100%;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: var(--text-xs, 12px);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-body);
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 1px 8px 1px 7px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-pill, 999px);
+  background: var(--surface);
+  transition: border-color var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.dot {
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border: 1.25px solid var(--border-strong);
+  border-radius: 50%;
+  box-sizing: border-box;
+  transition:
+    background-color var(--duration-standard, 0.2s) var(--ease-standard, ease),
+    border-color var(--duration-standard, 0.2s) var(--ease-standard, ease);
+}
+
+.status[data-state="busy"] .dot {
+  border-color: var(--mrf-accent);
+  background: color-mix(in oklab, var(--mrf-accent) 35%, transparent);
+}
+
+.status[data-state="done"] {
+  color: var(--foreground);
+}
+
+.status[data-state="done"] .dot {
+  border-color: var(--success);
+  background: var(--success);
+}
+
+.status[data-state="warn"] {
+  color: var(--foreground);
+}
+
+.status[data-state="warn"] .dot {
+  border-color: var(--warning);
+  background: color-mix(in oklab, var(--warning) 35%, transparent);
+}
+
+.status[data-state="error"] {
+  border-color: color-mix(in oklab, var(--danger) 30%, var(--border-subtle));
+  color: var(--foreground);
+}
+
+.status[data-state="error"] .dot {
+  border-color: var(--danger);
+  background: var(--danger);
+}
+
+.weights {
+  display: grid;
+  gap: 4px;
+  width: 11.5rem;
+  max-width: 100%;
+  margin-top: var(--space-2, 8px);
+}
+
+.bar {
+  position: relative;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.barA,
+.barB {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  will-change: transform;
+}
+
+.barA {
+  background: var(--mrf-accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0.5);
+}
+
+.barB {
+  background: color-mix(in oklab, var(--mrf-accent) 42%, var(--surface));
+  transform-origin: 100% 50%;
+  transform: scaleX(0.5);
+}
+
+.split {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2, 8px);
+}
+
+.splitSide {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  min-width: 0;
+  font-size: var(--text-xs, 12px);
+  line-height: 1.4;
+}
+
+.splitName {
+  overflow: hidden;
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-body);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.splitPct {
+  min-width: 4ch;
+  color: var(--foreground);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  text-align: left;
+}
+
+.splitSide[data-end] .splitPct {
+  text-align: right;
+}
+
+.msg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  padding: 1px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+  font-family: var(--mono);
+  font-size: var(--text-xs, 12px);
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.msg[data-kind="fail"] {
+  border-color: color-mix(in oklab, var(--danger) 45%, var(--border));
+  color: var(--danger);
+}
+
+.msg[data-kind="pass"] {
+  border-color: color-mix(in oklab, var(--success) 45%, var(--border));
+  color: var(--foreground);
+}
+
+.tag {
+  position: absolute;
+  z-index: 3;
+  padding: 3px var(--space-2, 8px);
+  border-radius: var(--radius-pill, 999px);
+  color: var(--background);
+  background: var(--foreground);
+  font-size: var(--text-xs, 12px);
+  font-weight: 500;
+  letter-spacing: var(--tracking-body);
+  line-height: 1.3;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  --tx: -50%;
+  --ty: -100%;
+  transform: translate(var(--tx), var(--ty)) translateY(4px) scale(0.96);
+  transform-origin: 50% 100%;
+  transition:
+    opacity var(--duration-fast, 0.15s) var(--ease-standard, ease),
+    transform var(--duration-fast, 0.15s) var(--ease-standard, ease);
+}
+
+.tag[data-below] {
+  --ty: 0%;
+  transform-origin: 50% 0;
+}
+
+.tag[data-align="end"] {
+  --tx: calc(-100% + 24px);
+  transform-origin: 100% 100%;
+}
+
+.tag[data-align="start"] {
+  --tx: -24px;
+  transform-origin: 0 100%;
+}
+
+.tag[data-show] {
+  opacity: 1;
+  transform: translate(var(--tx), var(--ty));
+  transition:
+    opacity var(--duration-standard, 0.2s) var(--ease-standard, ease),
+    transform var(--duration-spring, 0.3s) var(--ease-spring, cubic-bezier(0.22, 1, 0.36, 1));
+}
+
+.controls {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3, 12px);
+  width: 100%;
+  max-width: 640px;
+  margin-inline: auto;
+}
+
+.toggle {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin-top: 2px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  background: var(--surface);
+  cursor: pointer;
+  outline: none;
+  transition:
+    color var(--duration-fast, 0.15s) var(--ease-standard, ease),
+    background-color var(--duration-fast, 0.15s) var(--ease-standard, ease),
+    transform var(--duration-spring, 0.3s) var(--ease-spring, ease);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .toggle:hover:not(:disabled) {
+    color: var(--foreground);
+    background: var(--surface-muted);
+  }
+}
+
+.toggle:active {
+  transform: scale(0.97);
+}
+
+.toggle:focus-visible {
+  box-shadow: 0 0 0 2px var(--focus-ring, var(--accent));
+}
+
+.toggle:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.segments {
+  display: grid;
+  flex: 1 1 0%;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+}
+
+.seg {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  align-content: start;
+  padding: 10px 0 0;
+  border: 0;
+  color: var(--text-muted);
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  transition: color var(--duration-fast, 0.15s) var(--ease-standard, ease);
+}
+
+.seg[data-current="true"] {
+  color: var(--foreground);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .seg:hover {
+    color: var(--foreground);
+  }
+}
+
+.seg:focus-visible .track {
+  box-shadow: 0 0 0 2px var(--focus-ring, var(--accent));
+}
+
+.track {
+  display: block;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mrf-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+.segLabel {
+  overflow: hidden;
+  font-size: var(--text-xs, 12px);
+  letter-spacing: var(--tracking-body);
+  line-height: 1.3;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.caption {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: calc(var(--text-sm, 14px) * 1.4 * 3);
+  margin: 0 auto;
+  max-width: 560px;
+  padding-inline: var(--space-4, 16px);
+  text-align: center;
+}
+
+.capTitle {
+  font-size: var(--text-sm, 14px);
+  font-weight: 500;
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body, 1.5);
+}
+
+.capText {
+  font-size: var(--text-sm, 14px);
+  color: var(--text-secondary);
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body, 1.5);
+  text-wrap: balance;
+}
+
+@container (width < 640px) {
+  .label {
+    max-width: 10.5rem;
+  }
+
+  .label[data-kind="primary"],
+  .label[data-kind="secondary"] {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: min(11rem, 48cqi - 8px);
+  }
+
+  .label[data-kind="primary"] .status,
+  .label[data-kind="secondary"] .status {
+    max-width: none;
+  }
+
+  .label[data-kind="primary"] .metric,
+  .label[data-kind="secondary"] .metric {
+    min-height: calc(var(--text-xs, 12px) * 1.5 * 2);
+    white-space: normal;
+  }
+
+  .stage {
+    margin-bottom: var(--space-6, 24px);
+  }
+
+  .segLabel {
+    display: none;
+  }
+
+  .seg {
+    min-height: 36px;
+    padding-top: 16px;
+  }
+
+  .controls {
+    align-items: center;
+  }
+
+  .toggle {
+    margin-top: 0;
+  }
+
+  .caption {
+    min-height: calc(var(--text-sm, 14px) * 1.4 * 4);
+    padding-inline: 0;
+  }
+}
+
+@container (640px <= width < 860px) {
+  .meta {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cube :is(.faceLeft, .faceRight),
+  .dot,
+  .faceTop,
+  .floor,
+  .node,
+  .route,
+  .seg,
+  .stage > :is(.svg, .label),
+  .status,
+  .tag,
+  .toggle,
+  .traffic {
+    transition-duration: var(--duration-instant, 0.1s);
+  }
+}
+
+.demo {
+  display: grid;
+  width: 100%;
+  max-width: 1080px;
+  margin-inline: auto;
+}

@@ -1,0 +1,469 @@
+.root {
+  container-type: inline-size;
+  --mt-accent: var(--accent);
+  position: relative;
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: var(--font-body);
+  color: var(--foreground);
+}
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  align-items: stretch;
+}
+
+@container (min-width: 720px) {
+  .body {
+    grid-template-columns: minmax(0, 1fr) 232px;
+  }
+}
+
+.stage {
+  position: relative;
+  min-width: 0;
+  width: 100%;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+  user-select: none;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.edge {
+  fill: none;
+  stroke: color-mix(in oklab, var(--mt-accent) calc(var(--w, 0) * 78%), var(--border));
+  stroke-linecap: round;
+  transition: stroke 120ms linear;
+}
+
+.forward {
+  fill: none;
+  stroke: var(--mt-accent);
+  stroke-linecap: round;
+}
+
+.backward {
+  fill: none;
+  stroke: var(--danger);
+  stroke-linecap: round;
+  stroke-dasharray: 4 6;
+}
+
+.node {
+  fill: var(--surface-raised);
+  stroke: var(--border-strong);
+  stroke-width: 1.3;
+  transition: fill 120ms linear, stroke 120ms linear;
+}
+
+.nodeActive {
+  fill: color-mix(in oklab, var(--mt-accent) 16%, var(--surface-raised));
+  stroke: var(--mt-accent);
+}
+
+.nodeError {
+  fill: color-mix(in oklab, var(--danger) 14%, var(--surface-raised));
+  stroke: var(--danger);
+}
+
+.stackCard {
+  fill: var(--surface-raised);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.stackCardHeldout {
+  fill: var(--surface-muted);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.stackLine {
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.packet {
+  fill: var(--mt-accent);
+}
+
+.packetEval {
+  fill: var(--success);
+}
+
+.layerLabel {
+  fill: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.stackTitle {
+  fill: var(--foreground);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.stackSub {
+  fill: var(--text-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+.className {
+  fill: var(--foreground);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+
+.classProb {
+  fill: var(--text-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.probTrack {
+  fill: var(--surface-muted);
+}
+
+.probFill {
+  fill: var(--mt-accent);
+}
+
+.panel {
+  display: grid;
+  align-content: space-between;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.stats {
+  display: grid;
+  gap: 14px;
+}
+
+.statBlock {
+  display: grid;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.statValueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.statUnit {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.statNote {
+  font-size: 12px;
+  color: var(--text-secondary);
+  min-height: 1.4em;
+}
+
+.chartWrap {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.chartSvg {
+  display: block;
+  width: 100%;
+  height: 92px;
+}
+
+.chartGrid {
+  stroke: var(--border-subtle);
+  stroke-width: 1;
+}
+
+.chartAxis {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.chartLine {
+  fill: none;
+  stroke: var(--mt-accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.chartArea {
+  fill: color-mix(in oklab, var(--mt-accent) 12%, transparent);
+}
+
+.chartHead {
+  fill: var(--mt-accent);
+}
+
+.chartVal {
+  fill: var(--success);
+  stroke: var(--surface);
+  stroke-width: 1.5;
+}
+
+.evalRow {
+  display: grid;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.evalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.evalTitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.evalTarget {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.evalStates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.evalBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill, 999px);
+  border: 1px solid var(--border-subtle);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: transparent;
+  transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.evalBadge[data-active="waiting"] {
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  border-color: var(--border);
+}
+
+.evalBadge[data-active="running"] {
+  color: var(--mt-accent);
+  background: color-mix(in oklab, var(--mt-accent) 12%, transparent);
+  border-color: color-mix(in oklab, var(--mt-accent) 36%, transparent);
+}
+
+.evalBadge[data-active="passed"] {
+  color: var(--success);
+  background: color-mix(in oklab, var(--success) 12%, transparent);
+  border-color: color-mix(in oklab, var(--success) 38%, transparent);
+}
+
+.evalDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.controls {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.playBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+}
+
+.playBtn:hover {
+  background: var(--surface-muted);
+}
+
+.playBtn:focus-visible {
+  outline: 2px solid var(--mt-accent);
+  outline-offset: 2px;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.stepBtn {
+  position: relative;
+  display: grid;
+  gap: 5px;
+  padding: 7px 9px 6px;
+  border-radius: var(--radius-control);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard);
+}
+
+.stepBtn:hover {
+  background: var(--surface-muted);
+  color: var(--foreground);
+}
+
+.stepBtn[aria-current="step"] {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  color: var(--foreground);
+}
+
+.stepBtn:focus-visible {
+  outline: 2px solid var(--mt-accent);
+  outline-offset: 2px;
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+}
+
+.stepNum {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex: 0 0 auto;
+}
+
+.stepBtn[aria-current="step"] .stepNum {
+  background: var(--mt-accent);
+  color: #fff;
+}
+
+.stepName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.stepTrack {
+  display: block;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--surface-muted);
+  overflow: hidden;
+}
+
+.stepFill {
+  display: block;
+  height: 100%;
+  background: var(--mt-accent);
+  transform-origin: left center;
+}
+
+.caption {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  min-height: 1.5em;
+}
+
+.captionLead {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+@container (max-width: 560px) {
+  .stepName {
+    display: none;
+  }
+  .stepBtn {
+    justify-items: center;
+    padding: 7px 6px 6px;
+  }
+  .stepTrack {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge,
+  .node,
+  .evalBadge,
+  .stepBtn,
+  .playBtn {
+    transition: none;
+  }
+}
+
+.demo {
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+}
