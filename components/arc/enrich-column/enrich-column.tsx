@@ -219,11 +219,9 @@ export function EnrichColumn({
 
   const updateCell = useCallback(
     (row: EnrichColumnRow, cell: EnrichColumnCell) => {
-      setCells((prev) => {
-        const next = { ...prev, [row.id]: cell };
-        cellsRef.current = next;
-        return next;
-      });
+      const next = { ...cellsRef.current, [row.id]: cell };
+      cellsRef.current = next;
+      setCells(next);
       onCellChange?.(row, cell);
     },
     [onCellChange]
@@ -246,14 +244,12 @@ export function EnrichColumn({
       );
 
       // Mark queued
-      setCells((prev) => {
-        const next = { ...prev };
-        for (const r of targetRows) {
-          next[r.id] = { status: "queued" };
-        }
-        cellsRef.current = next;
-        return next;
-      });
+      const queued: Record<string, EnrichColumnCell> = { ...cellsRef.current };
+      for (const r of targetRows) {
+        queued[r.id] = { status: "queued" };
+      }
+      cellsRef.current = queued;
+      setCells(queued);
 
       const runner = enrich ?? simulateEnrich;
       const limit = Math.max(1, concurrency);
@@ -333,16 +329,14 @@ export function EnrichColumn({
   const handleStop = () => {
     abortRef.current?.abort();
     setIsRunning(false);
-    setCells((prev) => {
-      const next: Record<string, EnrichColumnCell> = {};
-      for (const [k, v] of Object.entries(prev)) {
-        if (v.status === "done" || v.status === "failed") {
-          next[k] = v;
-        }
+    const next: Record<string, EnrichColumnCell> = {};
+    for (const [k, v] of Object.entries(cellsRef.current)) {
+      if (v.status === "done" || v.status === "failed") {
+        next[k] = v;
       }
-      cellsRef.current = next;
-      return next;
-    });
+    }
+    cellsRef.current = next;
+    setCells(next);
     setAnnouncement("Enrichment stopped");
   };
 

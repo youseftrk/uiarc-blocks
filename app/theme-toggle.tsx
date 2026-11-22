@@ -8,6 +8,8 @@ type Theme = "light" | "dark";
 const listeners = new Set<() => void>();
 
 function readTheme(): Theme {
+  const attr = document.documentElement.dataset.theme;
+  if (attr === "dark" || attr === "light") return attr;
   const stored = window.localStorage.getItem("theme");
   if (stored === "dark" || stored === "light") return stored;
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -15,8 +17,14 @@ function readTheme(): Theme {
 
 function subscribe(listener: () => void) {
   listeners.add(listener);
+  const observer = new MutationObserver(() => listener());
+  observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
   return () => {
     listeners.delete(listener);
+    observer.disconnect();
   };
 }
 

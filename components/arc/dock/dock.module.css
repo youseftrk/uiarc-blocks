@@ -21,12 +21,7 @@
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   max-width: 100%;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.dock::-webkit-scrollbar {
-  display: none;
+  overflow: visible;
 }
 
 .slot {
