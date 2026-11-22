@@ -1,0 +1,127 @@
+.root {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surface, var(--background));
+  border-radius: var(--radius-surface, 1.5rem);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: pan-y;
+}
+
+.root[data-fade="true"] .canvas {
+  -webkit-mask-image: radial-gradient(
+    ellipse 72% 72% at 50% 50%,
+    #000 42%,
+    rgba(0, 0, 0, 0.45) 76%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 72% 72% at 50% 50%,
+    #000 42%,
+    rgba(0, 0, 0, 0.45) 76%,
+    transparent 100%
+  );
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.content > * {
+  pointer-events: auto;
+}
+
+/* Demo styles */
+.demo {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.field {
+  height: 360px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-surface, 1.5rem);
+  background: var(--surface);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 20px;
+}
+
+.segment {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  padding: 3px;
+  border-radius: var(--radius-pill, 9999px);
+  background: color-mix(in oklch, var(--surface-raised, var(--surface)) 86%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.thumb {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: var(--radius-pill, 9999px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.option {
+  position: relative;
+  z-index: 1;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 6px 14px;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 500;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  border-radius: var(--radius-pill, 9999px);
+  transition: color 150ms ease;
+  white-space: nowrap;
+}
+
+.option[aria-pressed="true"] {
+  color: var(--foreground);
+}
+
+.option:focus-visible {
+  outline: 2px solid var(--ring, var(--accent));
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb {
+    transition: none;
+  }
+}

@@ -1,0 +1,562 @@
+.root {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.card {
+  border-radius: var(--radius-panel, 1.25rem);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm, 0 2px 10px rgba(0, 0, 0, 0.04));
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: 600;
+  color: var(--foreground);
+  letter-spacing: -0.01em;
+}
+
+.count {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--foreground-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.runBtn {
+  appearance: none;
+  border: 0;
+  border-radius: var(--radius-control, 0.875rem);
+  height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 500;
+  cursor: pointer;
+  background: var(--accent);
+  color: var(--accent-foreground, #fff);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: opacity 140ms ease, transform 120ms ease, background-color 140ms ease;
+}
+
+.runBtn[data-running="true"] {
+  background: var(--surface-sunken, var(--hover));
+  color: var(--foreground);
+  border: 1px solid var(--border);
+}
+
+.runBtn:active {
+  transform: scale(0.97);
+}
+
+.runBtn:focus-visible {
+  outline: 2px solid var(--ring, var(--accent));
+  outline-offset: 2px;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.colCompany {
+  width: 34%;
+}
+
+.table thead th {
+  text-align: left;
+  font-weight: 500;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--foreground-muted);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklch, var(--surface-sunken, var(--surface)) 55%, var(--surface));
+  vertical-align: middle;
+}
+
+.aiHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sparkle {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.aiText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+  gap: 1px;
+}
+
+.aiName {
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aiPrompt {
+  font-size: 11px;
+  color: var(--foreground-subtle, var(--foreground-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.iconButton {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--foreground-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color 140ms ease, background-color 140ms ease, border-color 140ms ease;
+}
+
+.iconButton:hover {
+  color: var(--foreground);
+  background: var(--hover, color-mix(in oklch, var(--foreground) 6%, transparent));
+  border-color: var(--border);
+}
+
+.iconButton:focus-visible {
+  outline: 2px solid var(--ring, var(--accent));
+  outline-offset: 1px;
+}
+
+/* Inline prompt editor */
+.editor {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in oklch, var(--accent) 4%, var(--surface));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.editorRow {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.editorLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--foreground-muted);
+}
+
+.editorInput,
+.editorTextarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  padding: 7px 10px;
+  font-size: var(--text-xs, 0.75rem);
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.editorTextarea {
+  min-height: 54px;
+  resize: vertical;
+  line-height: 1.45;
+}
+
+.editorInput:focus,
+.editorTextarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--accent) 16%, transparent);
+}
+
+.editorActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.editorHint {
+  font-size: 11px;
+  color: var(--foreground-subtle, var(--foreground-muted));
+}
+
+.editorBtns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ghostBtn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground-muted);
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ghostBtn:hover {
+  color: var(--foreground);
+}
+
+.saveBtn {
+  appearance: none;
+  border: 0;
+  background: var(--accent);
+  color: var(--accent-foreground, #fff);
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 8px;
+  font-size: var(--text-xs, 0.75rem);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+/* Rows */
+.table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 140ms ease;
+}
+
+.table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.table tbody tr:hover {
+  background: color-mix(in oklch, var(--foreground) 2.5%, transparent);
+}
+
+.companyCell {
+  text-align: left;
+  font-weight: 500;
+  padding: 11px 16px;
+  vertical-align: middle;
+}
+
+.company {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.logo {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised, var(--surface));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--foreground);
+  flex-shrink: 0;
+}
+
+.companyText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  font-size: var(--text-sm, 0.8125rem);
+  font-weight: 500;
+  color: var(--foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.domain {
+  font-size: 11px;
+  color: var(--foreground-subtle, var(--foreground-muted));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultCell {
+  padding: 11px 16px;
+  vertical-align: middle;
+  font-size: var(--text-sm, 0.8125rem);
+}
+
+.cellInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.cellMain {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.idle {
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--foreground-subtle, var(--foreground-muted));
+}
+
+.queued {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--foreground-muted);
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--border-strong, var(--foreground-muted));
+}
+
+.running {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: var(--text-xs, 0.75rem);
+}
+
+.spinner {
+  width: 13px;
+  height: 13px;
+  border-radius: 9999px;
+  border: 1.75px solid color-mix(in oklch, var(--accent) 25%, transparent);
+  border-top-color: var(--accent);
+  animation: spin 720ms linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--foreground-muted) 0%,
+    var(--foreground) 45%,
+    var(--foreground-muted) 90%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 1.6s linear infinite;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -120% 0;
+  }
+}
+
+.value {
+  color: var(--foreground);
+  font-size: var(--text-sm, 0.8125rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--foreground-muted);
+  text-decoration: none;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  border: 1px solid var(--border);
+  background: var(--surface-raised, var(--surface));
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 140ms ease, border-color 140ms ease;
+}
+
+.source:hover {
+  color: var(--foreground);
+  border-color: var(--border-strong, var(--border));
+}
+
+.failed {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-xs, 0.75rem);
+  color: var(--danger, #dc2626);
+  min-width: 0;
+}
+
+.retryBtn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.retryBtn:hover {
+  border-color: var(--border-strong, var(--border));
+}
+
+.rowAction {
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.table tbody tr:hover .rowAction,
+.table tbody tr:focus-within .rowAction {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .rowAction {
+    opacity: 1;
+  }
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: color-mix(in oklch, var(--surface-sunken, var(--surface)) 45%, var(--surface));
+  font-size: 11px;
+  color: var(--foreground-muted);
+}
+
+.model {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.modelName {
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.modelDetail {
+  color: var(--foreground-muted);
+}
+
+.progressText {
+  font-variant-numeric: tabular-nums;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 520px) {
+  .colCompany {
+    width: 36%;
+  }
+
+  .domain,
+  .sourceLabel,
+  .modelDetail {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .shimmer {
+    animation: none;
+  }
+
+  .shimmer {
+    background: none;
+    color: var(--foreground-muted);
+  }
+}
